@@ -1,0 +1,135 @@
+---
+title: "Running Docker Containers"
+author: "Mark Dunning"
+date: "6 September 2016"
+output: html_document
+---
+
+
+## The obligatory 'Hello World example'
+
+To run a docker container, we use the command `docker run` followed by the name of the container we want to run. You should already have a `ubuntu` container, so lets try and run it 
+
+```{r engine="bash"}
+docker run ubuntu
+```
+
+Nothing happens. In this case, we need to give a command that we want to execute, or run the container interactively. In the first case we will use the `echo` command to print the hello world message in the traditional fashion.
+
+```{bash}
+docker run ubuntu echo "Hello World"
+```
+
+or we could print the current date and time
+
+```{bash}
+docker run ubuntu date
+```
+
+In both cases, we ran a single command, printed the output and then exited. To launch an interactive session, we can change the arguments to the `run` command to attach standard input with `-i` (stdin) and allocate an output (tty) with `-t`. This will drop us into a terminal. You should notice that the the username changes to `root` and the machine name is the name of the container. You can exit the container using `exit`
+
+```{bash,eval=FALSE}
+docker run -i -t ubuntu /bin/bash
+```
+
+By default, we are running the *latest* version of Ubuntu. A very useful feature of Docker is that containers can be versioned, so we can always go back to a previous version. There is a file `/etc/lsb-release` that will tell us which version of Ubuntu is being run;
+
+
+```{bash}
+docker run ubuntu cat /etc/lsb-release
+```
+
+Alternative versions can be executed by specifying a *"tag"* after the container name. Ubuntu has tags that correspond to particular versions of the OS.
+
+```{bash}
+docker run ubuntu:14.04 cat /etc/lsb-release
+```
+
+
+## Running a structural variant caller (delly)
+
+Let's say that someone has released a new tool that sounds amazing. You are itching to try it out, but from past experience know how much of a pain it can be to install new software. This is a situation where docker can really help.
+
+Fortunately, the author of `delly` (a tool for calling structural variants) has created a docker container that we can run. The main program, `delly` can be run as follows to display help information;
+
+
+```{bash}
+docker run trausch/delly delly
+```
+
+As before, we can run delly interactively with the `-it` argument. However, once we launch into docker we cannot automatically see the contents of our own hard drive. 
+
+```{bash eval=FALSE}
+docker run -it trausch/delly /bin/bash
+```
+
+We can mount *volumes* from a particular location on our host drive onto the file system used in the docker container. Let's mount the `example/` directory of the course materials folder. Currently, this contains an example `.bam` file (mapped reads for a small region on chromosome 17). The analysis we are going to do will also require a reference genome, which you can download from UCSC. 
+
+```{bash eval=FALSE}
+wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr17.fa.gz -P example/
+gunzip data/chr17.fa.gz
+```
+
+The `-v` argument is used to mount the volume in the form `-v FROM:TO`. In this example, we mount the `example/` sub-directory of the current working directory to a folder `/data/` inside the container. This needs to be the full path to the directory. We use `pwd` to expand the current working directory.
+
+```{bash eval=FALSE}
+docker run -ti -v `pwd`/example/:/data trausch/delly /bin/bash
+```
+
+Once the container is launched, we can list the contents of `/data/`, which should hopefully should match the local contents of `example/`
+
+```{bash eval=FALSE}
+ls -l /data/
+```
+
+```{bash echo=FALSE}
+docker run -v `pwd`/example:/data trausch/delly ls -l data/
+```
+
+Once the volume is mounted inside the container, anything written to `/data/` will be visible to the host directory. Exit the `delly` container, and re-run with the following. A new file should be created in `example/` 
+
+```{bash}
+docker run -v `pwd`/example/:/data trausch/delly touch /data/hello.txt
+ls example/
+```
+
+The actual command to run `delly` on our example data is as follows. When specifying the paths to bam and reference file, we have to specify the paths as they appear inside the container, so `/data/` in this case.
+
+```{bash}
+docker run -v `pwd`/example/:/data trausch/delly delly call -t DEL -o /data/test.bcf -g /data/chr17.fa /data/bwa.sorted.bam
+```
+
+Note that we don't actually call any structural variants in this example. That isn't important. What matters is that we've managed to setup the tool and run the tool in a relatively painless manner.
+
+A docker container may be comprised of many different software, so we are not just restricted to just running `delly` or standard unix commands. The container also has a version of `samtools`.
+
+```{bash}
+docker run -v `pwd`/example/:/data trausch/delly samtools --version
+docker run -v `pwd`/example/:/data trausch/delly samtools view -H /data/bwa.sorted.bam
+```
+
+
+## Running the latest version of Bioconductor
+
+```{bash,eval=FALSE}
+docker run bioconductor/release_base
+```
+
+### Commands used to create an example bam file
+
+```{bash eval=FALSE}
+### Example files used in Wales Gene Park NGS tutorial
+### See http://www.walesgenepark.cardiff.ac.uk/wp-content/uploads/2013/04/1.1-Introductory-NGS.pdf
+wget http://files.figshare.com/92198/Brca1Reads_1.1.fastq
+wget http://files.figshare.com/92203/Brca1Reads_1.2.fastq
+cat Brca1Reads_1.1.fastq Brca1Reads_1.2.fastq > reads.fq
+wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr17.fa.gz
+gunzip chr17.fa.gz
+bwa index -a bwtsw chr17.fa
+bwa aln chr17.fa reads.fq > bwa.sai
+bwa samse -f bwa.sam chr17.fa bwa.sai reads.fq
+samtools view -bS bwa.sam > bwa.bam
+samtools sort bwa.bam bwa.sorted
+samtools index bwa.sorted.bam
+```
+
