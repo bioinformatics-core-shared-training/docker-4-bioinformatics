@@ -18,3 +18,5 @@ Short Course to get Bioinformaticians at CRUK-CI up-to-speed on Docker
 
 - Bio in Docker workshop
     http://f1000research.com/channels/containers?&selectedDomain=SLIDES
+- Short youtube explanation
+    https://youtu.be/aLipr7tTuA4
