@@ -1,0 +1,6 @@
+{
+  "name": "Docker-4-bioinformatics",
+  "tagline": "Short Course to get Bioinformaticians at CRUK-CI up-to-speed on Docker",
+  "body": "### Introduction to Docker for Bioinformatics\r\n\r\nWe introduce Docker and how it can be used to distribute Bioinformatics software\r\n\r\n## Pre-requisities\r\n1. Watch this introductory video on [youtube](https://www.youtube.com/watch?v=aLipr7tTuA4)\r\n1. Install Docker for your operating system. [Docker for Mac](https://docs.docker.com/docker-for-mac) requires OS X 10.10.3 Yosemite or newer. [Docker for Windows](https://docs.docker.com/docker-for-windows) requires Windows 10. If you do not have Mac OSX 10.10.3 or Windows 10, you will have to install [Docker Toolbox](https://docs.docker.com/toolbox/overview)\r\n\r\n2. Follow the installation instructions\r\n3. Once docker is sucessfully running, you can run the following at the command-line:-\r\n\r\n`docker pull ubuntu`\r\n\r\n`docker pull trausch/delly/`\r\n",
+  "note": "Don't delete this file! It's used internally to help with page regeneration."
+}
