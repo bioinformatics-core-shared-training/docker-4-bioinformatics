@@ -1,0 +1,84 @@
+---
+title: "Creating Docker Containers"
+author: "Mark Dunning"
+date: '`r format(Sys.time(), "Last modified: %d %b %Y")`'
+output: html_document
+---
+
+## Objective
+
+Create a sandbox image to perform alignment, qc and genotyping of NGS data with the following tools:-
+
+- samtools
+- bwa
+- freebayes
+- fastqc
+
+## Overview
+
+The creation of Docker images is specified by a *Dockerfile*. This is a text file containing the sequence of instructions required to build your image from some starting point, which could be the standard Ubuntu image. 
+
+In this section we show how to create a Dockerfile and use them to build a docker image. A useful reference is the official [Docker documentation on Dockerfiles](https://docs.docker.com/engine/reference/builder/), which goes into far more detail than we will here.
+
+
+## Step 1 - Setting-up the base image
+
+- create a blank text file called `Dockerfile` with the following contents
+    + build the image from `ubuntu`
+    + tell docker who you are and where people can complain to
+    
+```
+FROM ubuntu
+MAINTAINER YOU NAME<your.name@cruk.cam.ac.uk
+```
+
+- We are going to install `samtools` and `bwa` in the image. As it happens, both of these tools are available in standard repositories so can be installed using `apt-get`. It is a good idea to update the repositories to the latest version before installing anything, which is done with the command `apt-get update`. To run this command as part of the build process, we add the `RUN` instruction to `Dockerfile` with the command we want to run.
+
+
+```
+FROM ubuntu
+MAINTAINER YOU NAME<your.name@cruk.cam.ac.uk
+RUN apt-get update
+```
+
+- Now to install the two packages we can add `apt-get install bwa samtools` to the file.
+
+```
+FROM ubuntu
+MAINTAINER YOU NAME<your.name@cruk.cam.ac.uk
+RUN apt-get update
+RUN apt-get install samtools bwa
+```
+
+## Step 2 - Building the image
+
+We can now have a go at building the image using the `build` command in docker. The argument `-t` in this case specifies a name for the image (tag?) and traditionally the `Dockerfile` is located in the current directory 
+
+```{bash, eval=FALSE}
+docker build -t docker-test .
+```
+
+We can test the image we just built using a `docker run` statement:-
+
+```{bash, eval=FALSE}
+docker run docker-test samtools
+```
+
+## Step 3 - Installing software from a zip file
+
+The `fastqc` tool is available as a zip file from the Babraham Bioinformatics Core website. 
+
+- add `wget` and `unzip` to the list of packages installed via `apt-get`
+- change the working directory using the Docker `WORKDIR` command
+- create a symbolic link so the fastqc command can be run from anywhere
+
+```
+FROM ubuntu
+MAINTAINER YOU NAME<your.name@cruk.cam.ac.uk
+RUN apt-get update
+RUN apt-get install -y samtools bwa wget unzip
+WORKDIR /tmp
+RUN wget http://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.11.3.zip
+RUN unzip fastqc_v0.11.3.zip
+RUN ln -s /tmp/FastQC/fastqc /usr/bin/fastqc
+```
