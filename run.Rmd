@@ -129,6 +129,12 @@ docker run -ti bioconductor/release_base R
 
 Don't forget that if you want to save your results to the host machine you will need to mount a volume as we discussed above. If you find yourself installing the same R packages every time you launch the container, you probably want to be building your own. This is achievable by creating a *Dockerfile*, as we will see in the next section.
 
+You could even release a docker container for the analysis of your paper, as [Stephen Eglen](https://sje30.github.io/) from DAMTP has done for his 2014 paper. Running this container will load RStudio with all the packages and scripts available. The implications for reproducibility are tremendous. 
+
+```{bash, eval=FALSE}
+docker run -d -p 8787:8787 sje30/waverepo
+```
+
 
 
 ### Appendix: Commands used to create an example bam file

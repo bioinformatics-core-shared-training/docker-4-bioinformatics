@@ -117,7 +117,7 @@ $(document).ready(function () {
 
 <h1 class="title toc-ignore">Running Docker Containers</h1>
 <h4 class="author"><em>Mark Dunning</em></h4>
-<h4 class="date"><em>6 September 2016</em></h4>
+<h4 class="date"><em>Last modified: 15 Sep 2016</em></h4>
 
 </div>
 
@@ -131,7 +131,7 @@ $(document).ready(function () {
 <pre><code>## Hello World</code></pre>
 <p>or we could print the current date and time</p>
 <pre class="bash"><code>docker run ubuntu date</code></pre>
-<pre><code>## Thu Sep 15 14:02:38 UTC 2016</code></pre>
+<pre><code>## Thu Sep 15 15:29:26 UTC 2016</code></pre>
 <p>In both cases, we ran a single command, printed the output and then exited. To launch an interactive session, we can change the arguments to the <code>run</code> command to attach standard input with <code>-i</code> (stdin) and allocate an output (tty) with <code>-t</code>. This will drop us into a terminal. You should notice that the the username changes to <code>root</code> and the machine name is the name of the container. You can exit the container using <code>exit</code></p>
 <pre class="bash"><code>docker run -i -t ubuntu /bin/bash</code></pre>
 <p>By default, we are running the <em>latest</em> version of Ubuntu. A very useful feature of Docker is that containers can be versioned, so we can always go back to a previous version. There is a file <code>/etc/lsb-release</code> that will tell us which version of Ubuntu is being run;</p>
@@ -182,7 +182,7 @@ gunzip data/chr17.fa.gz</code></pre>
 ## -rw-r--r-- 1 1000 1000  7234067 Sep  6 14:46 bwa.sorted.bam
 ## -rw-r--r-- 1 1000 1000    41656 Sep  6 14:48 bwa.sorted.bam.bai
 ## -rw-r--r-- 1 1000 1000 82819122 Mar 20  2009 chr17.fa
-## -rw-r--r-- 1 root root        0 Sep  6 15:33 hello.txt</code></pre>
+## -rw-r--r-- 1 root root        0 Sep 15 15:24 hello.txt</code></pre>
 <p>Once the volume is mounted inside the container, anything written to <code>/data/</code> will be visible to the host directory. Exit the <code>delly</code> container, and re-run with the following. A new file should be created in <code>example/</code></p>
 <pre class="bash"><code>docker run -v `pwd`/example/:/data trausch/delly touch /data/hello.txt
 ls example/</code></pre>
@@ -192,8 +192,8 @@ ls example/</code></pre>
 ## hello.txt</code></pre>
 <p>The actual command to run <code>delly</code> on our example data is as follows. When specifying the paths to bam and reference file, we have to specify the paths as they appear inside the container, so <code>/data/</code> in this case.</p>
 <pre class="bash"><code>docker run -v `pwd`/example/:/data trausch/delly delly call -t DEL -o /data/test.bcf -g /data/chr17.fa /data/bwa.sorted.bam</code></pre>
-<pre><code>## [2016-Sep-15 14:02:45] delly call -t DEL -o /data/test.bcf -g /data/chr17.fa /data/bwa.sorted.bam 
-## [2016-Sep-15 14:02:45] Paired-end clustering
+<pre><code>## [2016-Sep-15 15:29:33] delly call -t DEL -o /data/test.bcf -g /data/chr17.fa /data/bwa.sorted.bam 
+## [2016-Sep-15 15:29:33] Paired-end clustering
 ## 
 ## 0%   10   20   30   40   50   60   70   80   90   100%
 ## |----|----|----|----|----|----|----|----|----|----|
@@ -219,9 +219,11 @@ docker run -v `pwd`/example/:/data trausch/delly samtools view -H /data/bwa.sort
 <p>We if we open a web browser and type the address<code>http://localhost:8787</code>, you should see a rstudio server login page. The username and password are both <code>rstudio</code>. After login you will have a fully-functioning RStudio instance inside your web browser. If you require a package you can use <code>install.packages</code> or <code>biocLite</code> in the usual fashion</p>
 <p>If you require command line R, rather than RStudio, you can do</p>
 <pre class="bash"><code>docker run -ti bioconductor/release_base R</code></pre>
-<p>Don’t forget that if you want to save your results to the host machine you will need to mount a volume as we discussed above.</p>
-<div id="commands-used-to-create-an-example-bam-file" class="section level3">
-<h3>Commands used to create an example bam file</h3>
+<p>Don’t forget that if you want to save your results to the host machine you will need to mount a volume as we discussed above. If you find yourself installing the same R packages every time you launch the container, you probably want to be building your own. This is achievable by creating a <em>Dockerfile</em>, as we will see in the next section.</p>
+<p>You could even release a docker container for the analysis of your paper, as <a href="https://sje30.github.io/">Stephen Eglen</a> from DAMTP has done for his 2014 paper. Running this container will load RStudio with all the packages and scripts available. The implications for reproducibility are tremendous.</p>
+<pre class="bash"><code>docker run -d -p 8787:8787 sje30/waverepo</code></pre>
+<div id="appendix-commands-used-to-create-an-example-bam-file" class="section level3">
+<h3>Appendix: Commands used to create an example bam file</h3>
 <pre class="bash"><code>### Example files used in Wales Gene Park NGS tutorial
 ### See http://www.walesgenepark.cardiff.ac.uk/wp-content/uploads/2013/04/1.1-Introductory-NGS.pdf
 wget http://files.figshare.com/92198/Brca1Reads_1.1.fastq
