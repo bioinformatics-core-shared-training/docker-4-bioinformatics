@@ -1,7 +1,7 @@
 ---
 title: "Running Docker Containers"
 author: "Mark Dunning"
-date: "6 September 2016"
+date: '`r format(Sys.time(), "Last modified: %d %b %Y")`'
 output: html_document
 ---
 
@@ -111,11 +111,27 @@ docker run -v `pwd`/example/:/data trausch/delly samtools view -H /data/bwa.sort
 
 ## Running the latest version of Bioconductor
 
+The Bioconductor team now distribute various docker containers that are built-upon the [rocker](https://github.com/rocker-org/rocker) project. This is a convenient way of running an R instance with the latest (or an older version if you prefer) versions of particular packages installed. It is also possible to run such containers in a *Cloud* environment such as Amazon. Various flavous of container are available as described on the [Bioconductor website](http://bioconductor.org/help/docker/). For example there are pre-built containers containing sequencing, proteomics, flow cytometry packages.
+
+To run such a container, we can use the following. Here the `-p` argument is to open a port with a particular address. 
+
 ```{bash,eval=FALSE}
-docker run bioconductor/release_base
+docker run -p 8787:8787 bioconductor/release_base
 ```
 
-### Commands used to create an example bam file
+We if we open a web browser and type the address`http://localhost:8787`, you should see a rstudio server login page. The username and password are both `rstudio`. After login you will have a fully-functioning RStudio instance inside your web browser. If you require a package you can use `install.packages` or `biocLite` in the usual fashion
+
+If you require command line R, rather than RStudio, you can do
+
+```{bash eval=FALSE}
+docker run -ti bioconductor/release_base R
+```
+
+Don't forget that if you want to save your results to the host machine you will need to mount a volume as we discussed above. If you find yourself installing the same R packages every time you launch the container, you probably want to be building your own. This is achievable by creating a *Dockerfile*, as we will see in the next section.
+
+
+
+### Appendix: Commands used to create an example bam file
 
 ```{bash eval=FALSE}
 ### Example files used in Wales Gene Park NGS tutorial
