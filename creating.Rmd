@@ -16,17 +16,20 @@ Create a sandbox image to perform alignment, qc and genotyping of NGS data with 
 
 ## Overview
 
-The creation of Docker images is specified by a *Dockerfile*. This is a text file containing the sequence of instructions required to build your image from some starting point, which could be the standard Ubuntu image. 
+The creation of Docker images is specified by a *Dockerfile*. This is a text file containing the sequence of instructions required to re-create your image from some starting point, which could be the standard Ubuntu image. Essentially we list the commands we use, step-by-step to install all the software required. If you already have a shell script to install your software, then translating to a Dockerfile is relatively painless.
 
-In this section we show how to create a Dockerfile and use them to build a docker image. A useful reference is the official [Docker documentation on Dockerfiles](https://docs.docker.com/engine/reference/builder/), which goes into far more detail than we will here.
+In this section we show how to create a Dockerfile and use this file to build a docker image. A useful reference is the official [Docker documentation on Dockerfiles](https://docs.docker.com/engine/reference/builder/), which goes into far more detail than we will here.
 
+*For this section we will assume you have some experience installed Unix tools at the command line.*
 
 ## Step 1 - Setting-up the base image
 
 - create a blank text file called `Dockerfile` with the following contents
     + build the image from `ubuntu`
     + tell docker who you are and where people can complain to
-    
+
+The `FROM` instruction is mandatory as it defines the starting point for your image. 
+
 ```
 FROM ubuntu
 MAINTAINER YOU NAME<your.name@cruk.cam.ac.uk
@@ -34,6 +37,7 @@ MAINTAINER YOU NAME<your.name@cruk.cam.ac.uk
 
 - We are going to install `samtools` and `bwa` in the image. As it happens, both of these tools are available in standard repositories so can be installed using `apt-get`. It is a good idea to update the repositories to the latest version before installing anything, which is done with the command `apt-get update`. To run this command as part of the build process, we add the `RUN` instruction to `Dockerfile` with the command we want to run.
 
+N.B. If you plan to build your image on a distribution other than ubuntu (e.g. centos) you will have to use the appropriate package manager software (e.g. `yum` for centos).
 
 ```
 FROM ubuntu
@@ -52,7 +56,9 @@ RUN apt-get install samtools bwa
 
 ## Step 2 - Building the image
 
-We can now have a go at building the image using the `build` command in docker. The argument `-t` in this case specifies a name for the image (tag?) and traditionally the `Dockerfile` is located in the current directory 
+We can now have a go at building the image using the `build` command in docker. The argument `-t` in this case specifies a name for the image (tag?) and traditionally the `Dockerfile` is located in the current directory.
+
+N.B. As the `apt-get` command will get the latest package versions from the central Ubuntu repository, you will need to be *online* to run this build command.
 
 ```{bash, eval=FALSE}
 docker build -t docker-test .
@@ -66,7 +72,9 @@ docker run docker-test samtools
 
 ## Step 3 - Installing software from a zip file
 
-The `fastqc` tool is available as a zip file from the Babraham Bioinformatics Core website. 
+Rather than grabbing the latest version at a point in time, sometimes you might want to ensure that you have a particular version of a tool. The `fastqc` tool is available as a zip file from the Babraham Bioinformatics Core website. 
+
+We need to download the file (e.g. using `wget`) and then `unzip` the contents. However, neither `wget` or `unzip` are available in the `ubuntu` base image, so we need to install them.
 
 - add `wget` and `unzip` to the list of packages installed via `apt-get`
 - change the working directory using the Docker `WORKDIR` command

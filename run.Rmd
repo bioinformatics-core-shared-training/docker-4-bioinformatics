@@ -48,10 +48,14 @@ docker run ubuntu:14.04 cat /etc/lsb-release
 
 ## Running a structural variant caller (delly)
 
-Let's say that someone has released a new tool that sounds amazing. You are itching to try it out, but from past experience know how much of a pain it can be to install new software. This is a situation where docker can really help.
+Let's say that someone has released a new tool that sounds amazing. You are itching to try it out, but from past experience know how much of a pain it can be to install new software. Moreover, if you are experimenting with lots of different packages your `software` directory can get polluted with lots of tools that you run only once. This is a situation where docker can really help. 
 
-Fortunately, the author of `delly` (a tool for calling structural variants) has created a docker container that we can run. The main program, `delly` can be run as follows to display help information;
+As an example, the author of `delly` (a tool for calling structural variants) has created a docker container that we can run. Typically docker containers are uploaded to the central `Dockerhub` repository and submitted under a particular username (`trausch` in this case). It is common for a docker file to be under version control in github. 
 
+- [delly dockerhub entry](https://hub.docker.com/r/trausch/delly/)
+- [delly github page]()
+
+The main program, `delly` can be run from the container to display help information;
 
 ```{bash}
 docker run trausch/delly delly
