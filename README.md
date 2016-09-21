@@ -9,6 +9,7 @@ Short Course to get Bioinformaticians at CRUK-CI up-to-speed on Docker
 2. Creating a sandbox environment for a training course
     + https://github.com/bioinformatics-core-shared-training/cruk-summer-school-2016
 3. Creating a reproducible environment for your analysis
+    + https://github.com/sje30/waverepo
 4. Release you entire pipieline
     + https://github.com/cancerit/cgpbox
 
