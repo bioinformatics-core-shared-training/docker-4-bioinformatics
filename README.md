@@ -6,12 +6,11 @@ Short Course to get Bioinformaticians at CRUK-CI up-to-speed on Docker
 1. You want to try out some new software, and the developers have created a docker container
     + e.g. delly
     + https://hub.docker.com/r/trausch/delly/
-2. You want to install some software in a clean environment
-    + SOAP fusion?
-3. Creating a sandbox environment for a training course
+2. Creating a sandbox environment for a training course
     + https://github.com/bioinformatics-core-shared-training/cruk-summer-school-2016
-4. Creating a reproducible environment for your analysis
-
+3. Creating a reproducible environment for your analysis
+4. Release you entire pipieline
+    + https://github.com/cancerit/cgpbox
 
 
 # References:-
