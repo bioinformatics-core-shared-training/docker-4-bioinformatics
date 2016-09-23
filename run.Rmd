@@ -144,7 +144,17 @@ You could even release a docker container for the analysis of your paper, as [St
 docker run -d -p 8787:8787 sje30/waverepo
 ```
 
+## Entire pipelines as containers
 
+The Sanger institute have released their entire [cancer genome analysis pipeline](https://github.com/cancerit/cgpbox) via docker. This is part of an initiative with the Pan-Cancer genomes project and other major sequencing centres (Broad, DKFZ) are also committed to releasing software this way.
+
+For the end-user, it is a single command to install the software encompassing the entire pipeline. 
+
+```{bash eval=FALSE}
+docker pull quay.io/wtsicgp/cgp_in_a_box
+```
+
+Some configuration is required in order to run the pipeline on your own data. However, instructions to download and analyse a test dataset are included on the [website](https://github.com/cancerit/cgpbox)
 
 ### Appendix: Commands used to create an example bam file
 
