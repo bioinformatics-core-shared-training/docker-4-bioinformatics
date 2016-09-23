@@ -117,7 +117,7 @@ $(document).ready(function () {
 
 <h1 class="title toc-ignore">Running Docker Containers</h1>
 <h4 class="author"><em>Mark Dunning</em></h4>
-<h4 class="date"><em>Last modified: 15 Sep 2016</em></h4>
+<h4 class="date"><em>Last modified: 21 Sep 2016</em></h4>
 
 </div>
 
@@ -128,88 +128,93 @@ $(document).ready(function () {
 <pre class="bash"><code>docker run ubuntu</code></pre>
 <p>Nothing happens. In this case, we need to give a command that we want to execute, or run the container interactively. In the first case we will use the <code>echo</code> command to print the hello world message in the traditional fashion.</p>
 <pre class="bash"><code>docker run ubuntu echo &quot;Hello World&quot;</code></pre>
-<pre><code>## Hello World</code></pre>
+<pre><code>Hello World</code></pre>
 <p>or we could print the current date and time</p>
 <pre class="bash"><code>docker run ubuntu date</code></pre>
-<pre><code>## Thu Sep 15 15:29:26 UTC 2016</code></pre>
+<pre><code>Wed Sep 21 11:00:28 UTC 2016</code></pre>
 <p>In both cases, we ran a single command, printed the output and then exited. To launch an interactive session, we can change the arguments to the <code>run</code> command to attach standard input with <code>-i</code> (stdin) and allocate an output (tty) with <code>-t</code>. This will drop us into a terminal. You should notice that the the username changes to <code>root</code> and the machine name is the name of the container. You can exit the container using <code>exit</code></p>
 <pre class="bash"><code>docker run -i -t ubuntu /bin/bash</code></pre>
 <p>By default, we are running the <em>latest</em> version of Ubuntu. A very useful feature of Docker is that containers can be versioned, so we can always go back to a previous version. There is a file <code>/etc/lsb-release</code> that will tell us which version of Ubuntu is being run;</p>
 <pre class="bash"><code>docker run ubuntu cat /etc/lsb-release</code></pre>
-<pre><code>## DISTRIB_ID=Ubuntu
-## DISTRIB_RELEASE=16.04
-## DISTRIB_CODENAME=xenial
-## DISTRIB_DESCRIPTION=&quot;Ubuntu 16.04.1 LTS&quot;</code></pre>
+<pre><code>DISTRIB_ID=Ubuntu
+DISTRIB_RELEASE=16.04
+DISTRIB_CODENAME=xenial
+DISTRIB_DESCRIPTION=&quot;Ubuntu 16.04.1 LTS&quot;</code></pre>
 <p>Alternative versions can be executed by specifying a <em>“tag”</em> after the container name. Ubuntu has tags that correspond to particular versions of the OS.</p>
 <pre class="bash"><code>docker run ubuntu:14.04 cat /etc/lsb-release</code></pre>
-<pre><code>## DISTRIB_ID=Ubuntu
-## DISTRIB_RELEASE=14.04
-## DISTRIB_CODENAME=trusty
-## DISTRIB_DESCRIPTION=&quot;Ubuntu 14.04.5 LTS&quot;</code></pre>
+<pre><code>DISTRIB_ID=Ubuntu
+DISTRIB_RELEASE=14.04
+DISTRIB_CODENAME=trusty
+DISTRIB_DESCRIPTION=&quot;Ubuntu 14.04.5 LTS&quot;</code></pre>
 </div>
 <div id="running-a-structural-variant-caller-delly" class="section level2">
 <h2>Running a structural variant caller (delly)</h2>
-<p>Let’s say that someone has released a new tool that sounds amazing. You are itching to try it out, but from past experience know how much of a pain it can be to install new software. This is a situation where docker can really help.</p>
-<p>Fortunately, the author of <code>delly</code> (a tool for calling structural variants) has created a docker container that we can run. The main program, <code>delly</code> can be run as follows to display help information;</p>
+<p>Let’s say that someone has released a new tool that sounds amazing. You are itching to try it out, but from past experience know how much of a pain it can be to install new software. Moreover, if you are experimenting with lots of different packages your <code>software</code> directory can get polluted with lots of tools that you run only once. This is a situation where docker can really help.</p>
+<p>As an example, the author of <code>delly</code> (a tool for calling structural variants) has created a docker container that we can run. Typically docker containers are uploaded to the central <code>Dockerhub</code> repository and submitted under a particular username (<code>trausch</code> in this case). It is common for a docker file to be under version control in github.</p>
+<ul>
+<li><a href="https://hub.docker.com/r/trausch/delly/">delly dockerhub entry</a></li>
+<li><a href="https://github.com/tobiasrausch/delly">delly github page</a></li>
+</ul>
+<p>The main program, <code>delly</code> can be run from the container to display help information;</p>
 <pre class="bash"><code>docker run trausch/delly delly</code></pre>
-<pre><code>## **********************************************************************
-## Program: Delly
-## This is free software, and you are welcome to redistribute it under
-## certain conditions (GPL); for license details use '-l'.
-## This program comes with ABSOLUTELY NO WARRANTY; for details use '-w'.
-## 
-## Delly (Version: 0.7.3)
-## Contact: Tobias Rausch (rausch@embl.de)
-## **********************************************************************
-## 
-## Usage: delly &lt;command&gt; &lt;arguments&gt;
-## 
-## Commands:
-## 
-##     call         discover and genotype structural variants
-##     merge        merge structural variants across VCF/BCF files and within a single VCF/BCF file
-##     filter       filter somatic or germline structural variants</code></pre>
+<pre><code>**********************************************************************
+Program: Delly
+This is free software, and you are welcome to redistribute it under
+certain conditions (GPL); for license details use '-l'.
+This program comes with ABSOLUTELY NO WARRANTY; for details use '-w'.
+
+Delly (Version: 0.7.3)
+Contact: Tobias Rausch (rausch@embl.de)
+**********************************************************************
+
+Usage: delly &lt;command&gt; &lt;arguments&gt;
+
+Commands:
+
+    call         discover and genotype structural variants
+    merge        merge structural variants across VCF/BCF files and within a single VCF/BCF file
+    filter       filter somatic or germline structural variants</code></pre>
 <p>As before, we can run delly interactively with the <code>-it</code> argument. However, once we launch into docker we cannot automatically see the contents of our own hard drive.</p>
 <pre class="bash"><code>docker run -it trausch/delly /bin/bash</code></pre>
-<p>We can mount <em>volumes</em> from a particular location on our host drive onto the file system used in the docker container. Let’s mount the <code>example/</code> directory of the course materials folder. Currently, this contains an example <code>.bam</code> file (mapped reads for a small region on chromosome 17). The analysis we are going to do will also require a reference genome, which you can download from UCSC.</p>
+<p>We can mount <em>volumes</em> from a particular location on our host drive onto the file system used in the docker container. Let’s mount the <code>example/</code> directory of the course materials folder. Currently, this contains an <a href="https://github.com/bioinformatics-core-shared-training/docker-4-bioinformatics/raw/master/example/bwa.sorted.bam">example <code>.bam</code> file</a> (mapped reads for a small region on chromosome 17) and <a href="https://github.com/bioinformatics-core-shared-training/docker-4-bioinformatics/raw/master/example/bwa.sorted.bam.bai">index</a>. The analysis we are going to do will also require a reference genome, which you can download from UCSC.</p>
 <pre class="bash"><code>wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr17.fa.gz -P example/
 gunzip data/chr17.fa.gz</code></pre>
 <p>The <code>-v</code> argument is used to mount the volume in the form <code>-v FROM:TO</code>. In this example, we mount the <code>example/</code> sub-directory of the current working directory to a folder <code>/data/</code> inside the container. This needs to be the full path to the directory. We use <code>pwd</code> to expand the current working directory.</p>
 <pre class="bash"><code>docker run -ti -v `pwd`/example/:/data trausch/delly /bin/bash</code></pre>
 <p>Once the container is launched, we can list the contents of <code>/data/</code>, which should hopefully should match the local contents of <code>example/</code></p>
 <pre class="bash"><code>ls -l /data/</code></pre>
-<pre><code>## total 87996
-## -rw-r--r-- 1 1000 1000  7234067 Sep  6 14:46 bwa.sorted.bam
-## -rw-r--r-- 1 1000 1000    41656 Sep  6 14:48 bwa.sorted.bam.bai
-## -rw-r--r-- 1 1000 1000 82819122 Mar 20  2009 chr17.fa
-## -rw-r--r-- 1 root root        0 Sep 15 15:24 hello.txt</code></pre>
+<pre><code>total 87996
+-rw-r--r-- 1 1000 1000  7234067 Sep  6 14:46 bwa.sorted.bam
+-rw-r--r-- 1 1000 1000    41656 Sep  6 14:48 bwa.sorted.bam.bai
+-rw-r--r-- 1 1000 1000 82819122 Mar 20  2009 chr17.fa
+-rw-r--r-- 1 root root        0 Sep 21 10:51 hello.txt</code></pre>
 <p>Once the volume is mounted inside the container, anything written to <code>/data/</code> will be visible to the host directory. Exit the <code>delly</code> container, and re-run with the following. A new file should be created in <code>example/</code></p>
 <pre class="bash"><code>docker run -v `pwd`/example/:/data trausch/delly touch /data/hello.txt
 ls example/</code></pre>
-<pre><code>## bwa.sorted.bam
-## bwa.sorted.bam.bai
-## chr17.fa
-## hello.txt</code></pre>
+<pre><code>bwa.sorted.bam
+bwa.sorted.bam.bai
+chr17.fa
+hello.txt</code></pre>
 <p>The actual command to run <code>delly</code> on our example data is as follows. When specifying the paths to bam and reference file, we have to specify the paths as they appear inside the container, so <code>/data/</code> in this case.</p>
 <pre class="bash"><code>docker run -v `pwd`/example/:/data trausch/delly delly call -t DEL -o /data/test.bcf -g /data/chr17.fa /data/bwa.sorted.bam</code></pre>
-<pre><code>## [2016-Sep-15 15:29:33] delly call -t DEL -o /data/test.bcf -g /data/chr17.fa /data/bwa.sorted.bam 
-## [2016-Sep-15 15:29:33] Paired-end clustering
-## 
-## 0%   10   20   30   40   50   60   70   80   90   100%
-## |----|----|----|----|----|----|----|----|----|----|
-## ***************************************************
-## No structural variants found!
-## Done.</code></pre>
+<pre><code>[2016-Sep-21 11:00:34] delly call -t DEL -o /data/test.bcf -g /data/chr17.fa /data/bwa.sorted.bam 
+[2016-Sep-21 11:00:34] Paired-end clustering
+
+0%   10   20   30   40   50   60   70   80   90   100%
+|----|----|----|----|----|----|----|----|----|----|
+***************************************************
+No structural variants found!
+Done.</code></pre>
 <p>Note that we don’t actually call any structural variants in this example. That isn’t important. What matters is that we’ve managed to setup the tool and run the tool in a relatively painless manner.</p>
 <p>A docker container may be comprised of many different software, so we are not just restricted to just running <code>delly</code> or standard unix commands. The container also has a version of <code>samtools</code>.</p>
 <pre class="bash"><code>docker run -v `pwd`/example/:/data trausch/delly samtools --version
 docker run -v `pwd`/example/:/data trausch/delly samtools view -H /data/bwa.sorted.bam</code></pre>
-<pre><code>## samtools 1.3.1-31-gf3178b7
-## Using htslib 1.3.1-45-g2cddfb3
-## Copyright (C) 2016 Genome Research Ltd.
-## @HD  VN:1.3  SO:coordinate
-## @SQ  SN:chr17    LN:81195210
-## @PG  ID:bwa  PN:bwa  VN:0.7.12-r1039 CL:bwa samse -f bwa.sam chr17.fa bwa.sai reads.fq</code></pre>
+<pre><code>samtools 1.3.1-31-gf3178b7
+Using htslib 1.3.1-45-g2cddfb3
+Copyright (C) 2016 Genome Research Ltd.
+@HD VN:1.3  SO:coordinate
+@SQ SN:chr17    LN:81195210
+@PG ID:bwa  PN:bwa  VN:0.7.12-r1039 CL:bwa samse -f bwa.sam chr17.fa bwa.sai reads.fq</code></pre>
 </div>
 <div id="running-the-latest-version-of-bioconductor" class="section level2">
 <h2>Running the latest version of Bioconductor</h2>

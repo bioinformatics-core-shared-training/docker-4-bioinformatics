@@ -5,6 +5,11 @@ date: '`r format(Sys.time(), "Last modified: %d %b %Y")`'
 output: html_document
 ---
 
+```{r include = FALSE}
+library(knitr)
+opts_chunk$set(comment = NA) # eliminates hashtag from R outputs
+```
+
 
 ## The obligatory 'Hello World example'
 
@@ -53,7 +58,7 @@ Let's say that someone has released a new tool that sounds amazing. You are itch
 As an example, the author of `delly` (a tool for calling structural variants) has created a docker container that we can run. Typically docker containers are uploaded to the central `Dockerhub` repository and submitted under a particular username (`trausch` in this case). It is common for a docker file to be under version control in github. 
 
 - [delly dockerhub entry](https://hub.docker.com/r/trausch/delly/)
-- [delly github page]()
+- [delly github page](https://github.com/tobiasrausch/delly)
 
 The main program, `delly` can be run from the container to display help information;
 
@@ -67,7 +72,7 @@ As before, we can run delly interactively with the `-it` argument. However, once
 docker run -it trausch/delly /bin/bash
 ```
 
-We can mount *volumes* from a particular location on our host drive onto the file system used in the docker container. Let's mount the `example/` directory of the course materials folder. Currently, this contains an example `.bam` file (mapped reads for a small region on chromosome 17). The analysis we are going to do will also require a reference genome, which you can download from UCSC. 
+We can mount *volumes* from a particular location on our host drive onto the file system used in the docker container. Let's mount the `example/` directory of the course materials folder. Currently, this contains an [example `.bam` file](https://github.com/bioinformatics-core-shared-training/docker-4-bioinformatics/raw/master/example/bwa.sorted.bam) (mapped reads for a small region on chromosome 17) and [index](https://github.com/bioinformatics-core-shared-training/docker-4-bioinformatics/raw/master/example/bwa.sorted.bam.bai). The analysis we are going to do will also require a reference genome, which you can download from UCSC. 
 
 ```{bash eval=FALSE}
 wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr17.fa.gz -P example/

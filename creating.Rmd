@@ -7,12 +7,13 @@ output: html_document
 
 ## Objective
 
-Create a sandbox image to perform alignment, qc and genotyping of NGS data with the following tools:-
+Create a sandbox image to perform alignment, qc and bowtie alignment of rna-seq data with the following tools:-
 
 - samtools
-- bwa
-- freebayes
-- fastqc
+- bowtie
+- [kallisto](https://github.com/pachterlab/kallisto)
+
+samtools and bowtie are fairly standard tools, but kallisto is fairly new and generating a lot of interest.
 
 ## Overview
 
@@ -32,10 +33,10 @@ The `FROM` instruction is mandatory as it defines the starting point for your im
 
 ```
 FROM ubuntu
-MAINTAINER YOU NAME<your.name@cruk.cam.ac.uk
+MAINTAINER YOU NAME<your.name@cruk.cam.ac.uk>
 ```
 
-- We are going to install `samtools` and `bwa` in the image. As it happens, both of these tools are available in standard repositories so can be installed using `apt-get`. It is a good idea to update the repositories to the latest version before installing anything, which is done with the command `apt-get update`. To run this command as part of the build process, we add the `RUN` instruction to `Dockerfile` with the command we want to run.
+- We are going to install `samtools` and `bowtie2` in the image. As it happens, both of these tools are available in standard repositories so can be installed using `apt-get`. It is a good idea to update the repositories to the latest version before installing anything, which is done with the command `apt-get update`. To run this command as part of the build process, we add the `RUN` instruction to `Dockerfile` with the command we want to run.
 
 N.B. If you plan to build your image on a distribution other than ubuntu (e.g. centos) you will have to use the appropriate package manager software (e.g. `yum` for centos).
 
@@ -45,13 +46,13 @@ MAINTAINER YOU NAME<your.name@cruk.cam.ac.uk
 RUN apt-get update
 ```
 
-- Now to install the two packages we can add `apt-get install bwa samtools` to the file.
+- Now to install the two packages we can add `apt-get install bwa bowtie2` to the file. The `-y` argument is used because otherwise the command will wait for manual input from the user (pressing `y` to confirm the installation of packages) before proceeding and give an error message.
 
 ```
 FROM ubuntu
 MAINTAINER YOU NAME<your.name@cruk.cam.ac.uk
 RUN apt-get update
-RUN apt-get install samtools bwa
+RUN apt-get install -y samtools bowtie2
 ```
 
 ## Step 2 - Building the image
@@ -61,32 +62,96 @@ We can now have a go at building the image using the `build` command in docker. 
 N.B. As the `apt-get` command will get the latest package versions from the central Ubuntu repository, you will need to be *online* to run this build command.
 
 ```{bash, eval=FALSE}
-docker build -t docker-test .
+docker build -t rna-seq .
 ```
 
 We can test the image we just built using a `docker run` statement:-
 
 ```{bash, eval=FALSE}
-docker run docker-test samtools
+docker run rna-seq bowtie2
 ```
 
-## Step 3 - Installing software from a zip file
 
-Rather than grabbing the latest version at a point in time, sometimes you might want to ensure that you have a particular version of a tool. The `fastqc` tool is available as a zip file from the Babraham Bioinformatics Core website. 
 
-We need to download the file (e.g. using `wget`) and then `unzip` the contents. However, neither `wget` or `unzip` are available in the `ubuntu` base image, so we need to install them.
+## Step 3 - Installing software from github
 
-- add `wget` and `unzip` to the list of packages installed via `apt-get`
-- change the working directory using the Docker `WORKDIR` command
-- create a symbolic link so the fastqc command can be run from anywhere
+We can install kallisto from it's [github page](https://github.com/pachterlab/kallisto). For software hosting on github we typically use the command `git clone` to download the latest version of the software. We need the `git` software to be installed first, which we can do from the repositories using `apt-get`. 
+
+The [install instructions](https://github.com/pachterlab/kallisto/blob/master/INSTALL.md) mention that we need `cmake`, and `hdf5`, so we add the relevant libraries to the `apt-get` command. Remember, that you'll need to find the equivalent library names if using a base image other than `ubuntu`. 
+
+Finally, we want to change to a temporary directory before doing the `git clone`. We do this in the `DOCKERFILE` with the `WORKDIR` instruction (can't just do `cd` for some reason?)
+```
+FROM ubuntu
+MAINTAINER YOU NAME<your.name@cruk.cam.ac.uk
+RUN apt-get update
+RUN apt-get install -y samtools bwa 
+RUN apt-get install -y git cmake libhdf5-dev g++
+WORKDIR /tmp
+```
+
+The remaining lines are composed by taking the lines from the [install instructions](https://github.com/pachterlab/kallisto/blob/master/INSTALL.md) and putting a `RUN` instruction before each line.
 
 ```
 FROM ubuntu
 MAINTAINER YOU NAME<your.name@cruk.cam.ac.uk
 RUN apt-get update
-RUN apt-get install -y samtools bwa wget unzip
+RUN apt-get install -y samtools bwa 
+RUN apt-get install -y git cmake libhdf5-dev g++
 WORKDIR /tmp
-RUN wget http://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.11.3.zip
-RUN unzip fastqc_v0.11.3.zip
-RUN ln -s /tmp/FastQC/fastqc /usr/bin/fastqc
+RUN git clone https://github.com/pachterlab/kallisto.git
+WORKDIR kallisto
+RUN mkdir build
+WORKDIR build
+RUN cmake ..
+RUN make install
+WORKDIR /
 ```
+
+## Step 4. Building the final image
+
+We can build the image from the `Dockerfile`. You'll notice that any layers that have already been built are skipped.
+
+```{bash, eval=FALSE}
+docker build -t rna-seq .
+```
+
+Sometimes it is useful to build the whole image from scratch using the `--no-cache` option:-
+
+```{bash, eval=FALSE}
+docker build --no-cache -t rna-seq .
+```
+
+The `kallisto` software is now accesible to us
+
+```{bash, eval=FALSE}
+docker run rna-seq kallisto
+```
+
+## Installing software from other sources
+
+We are now going to install a version of picard from a zip file
+
+- install `wget` and `zip`
+- get the file from `https://github.com/broadinstitute/picard/releases/download/2.4.1/picard-tools-2.4.1.zip`
+- unzip
+- download java libraries `openjdk-8-jdk`
+
+```
+RUN apt-get install -y zip wget
+RUN wget https://github.com/broadinstitute/picard/releases/download/2.4.1/picard-tools-2.4.1.zip
+RUN unzip picard-tools-2.4.1.zip
+RUN apt-get update &&  apt-get install -y --fix-missing openjdk-8-jdk
+```
+
+When calling the picard `.jar` file, we don't want to have to refer to the full path to the file every time. So we are going to create an environment using the `ENV`
+
+```
+RUN apt-get install -y zip wget
+RUN wget https://github.com/broadinstitute/picard/releases/download/2.4.1/picard-tools-2.4.1.zip
+RUN unzip picard-tools-2.4.1.zip
+RUN apt-get update &&  apt-get install -y --fix-missing openjdk-8-jdk
+ENV PICARD /tmp/picard-tools-2.4.1/picard.jar
+```
+
+
+
