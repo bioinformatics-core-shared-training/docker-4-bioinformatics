@@ -117,59 +117,69 @@ $(document).ready(function () {
 
 <h1 class="title toc-ignore">Creating Docker Containers</h1>
 <h4 class="author"><em>Mark Dunning</em></h4>
-<h4 class="date"><em>Last modified: 23 Sep 2016</em></h4>
+<h4 class="date"><em>Last modified: 28 Sep 2016</em></h4>
 
 </div>
 
 
-<div id="objective" class="section level2">
-<h2>Objective</h2>
+<div id="overview" class="section level2">
+<h2>Overview</h2>
+<p>The creation of Docker images is specified by a <em>Dockerfile</em>. This is a text file containing the sequence of instructions required to re-create your image from some starting point, which could be the standard Ubuntu image. Essentially we list the commands we use, step-by-step to install all the software required. If you already have a shell script to install your software, then translating to a Dockerfile is relatively painless.</p>
+<p>In this section we show how to create a Dockerfile and use this file to build a docker image. A useful reference is the official <a href="https://docs.docker.com/engine/reference/builder/">Docker documentation on Dockerfiles</a>, which goes into far more detail than we will here.</p>
+<p>We’ll start with an example of modifying the Bioconductor image so that it we have all our favourite Illumina microarray analysis packages at-hand.</p>
+</div>
+<div id="setting-up-the-base-image" class="section level2">
+<h2>Setting-up the base image</h2>
+<ul>
+<li>create a blank text file called <code>Dockerfile</code> with the following contents
+<ul>
+<li>build the image from <code>bioconductor/release_base</code></li>
+<li>tell docker who you are and where people can complain to</li>
+</ul></li>
+</ul>
+<p>The <code>FROM</code> instruction is mandatory as it defines the starting point for your image.</p>
+<pre><code>FROM ubuntu
+MAINTAINER YOUR NAME&lt;your.name@cruk.cam.ac.uk&gt;</code></pre>
+<p>The remaining lines of the file are the command line steps you would run in order to create the image. We can use the command-line arguments to R to install packages in the usual manner with <code>biocLite.R</code>.</p>
+<pre><code>FROM bioconductor/release
+MAINTAINER YOUR NAME&lt;your.name@cruk.cam.ac.uk&gt;
+RUN R -e 'source(&quot;http://www.bioconductor.org/biocLite.R&quot;);biocLite(c(&quot;beadarray&quot;, &quot;illuminaHumanv4.db&quot;))'</code></pre>
+<p>That’s it!</p>
+<p>The <code>docker build</code> command is then used to build an image that we can use. The argument <code>-t</code> in this case specifies a name for the image (tag?) and traditionally the <code>Dockerfile</code> is located in the current directory.</p>
+<pre class="bash"><code>docker build -t illumina-analysis .</code></pre>
+<pre class="bash"><code>docker run -ti illumina-analysis R</code></pre>
+</div>
+<div id="longer-example" class="section level2">
+<h2>Longer-example</h2>
 <p>Create a sandbox image to perform alignment, qc and bowtie alignment of rna-seq data with the following tools:-</p>
+<p><em>For this section we will assume you have some experience of installing Unix tools at the command line.</em></p>
 <ul>
 <li>samtools</li>
 <li>bowtie</li>
 <li><a href="https://github.com/pachterlab/kallisto">kallisto</a></li>
 </ul>
 <p>samtools and bowtie are fairly standard tools, but kallisto is fairly new and generating a lot of interest.</p>
-</div>
-<div id="overview" class="section level2">
-<h2>Overview</h2>
-<p>The creation of Docker images is specified by a <em>Dockerfile</em>. This is a text file containing the sequence of instructions required to re-create your image from some starting point, which could be the standard Ubuntu image. Essentially we list the commands we use, step-by-step to install all the software required. If you already have a shell script to install your software, then translating to a Dockerfile is relatively painless.</p>
-<p>In this section we show how to create a Dockerfile and use this file to build a docker image. A useful reference is the official <a href="https://docs.docker.com/engine/reference/builder/">Docker documentation on Dockerfiles</a>, which goes into far more detail than we will here.</p>
-<p><em>For this section we will assume you have some experience installed Unix tools at the command line.</em></p>
-</div>
-<div id="step-1---setting-up-the-base-image" class="section level2">
-<h2>Step 1 - Setting-up the base image</h2>
-<ul>
-<li>create a blank text file called <code>Dockerfile</code> with the following contents
-<ul>
-<li>build the image from <code>ubuntu</code></li>
-<li>tell docker who you are and where people can complain to</li>
-</ul></li>
-</ul>
-<p>The <code>FROM</code> instruction is mandatory as it defines the starting point for your image.</p>
-<pre><code>FROM ubuntu
-MAINTAINER YOU NAME&lt;your.name@cruk.cam.ac.uk&gt;</code></pre>
 <ul>
 <li>We are going to install <code>samtools</code> and <code>bowtie2</code> in the image. As it happens, both of these tools are available in standard repositories so can be installed using <code>apt-get</code>. It is a good idea to update the repositories to the latest version before installing anything, which is done with the command <code>apt-get update</code>. To run this command as part of the build process, we add the <code>RUN</code> instruction to <code>Dockerfile</code> with the command we want to run.</li>
 </ul>
 <p>N.B. If you plan to build your image on a distribution other than ubuntu (e.g. centos) you will have to use the appropriate package manager software (e.g. <code>yum</code> for centos).</p>
+<p><strong>Create a new file called Dockerfile.rnaseq</strong></p>
 <pre><code>FROM ubuntu
-MAINTAINER YOU NAME&lt;your.name@cruk.cam.ac.uk
+MAINTAINER YOU NAME&lt;your.name@cruk.cam.ac.uk&gt;
 RUN apt-get update</code></pre>
 <ul>
 <li>Now to install the two packages we can add <code>apt-get install bwa bowtie2</code> to the file. The <code>-y</code> argument is used because otherwise the command will wait for manual input from the user (pressing <code>y</code> to confirm the installation of packages) before proceeding and give an error message.</li>
 </ul>
 <pre><code>FROM ubuntu
-MAINTAINER YOU NAME&lt;your.name@cruk.cam.ac.uk
+MAINTAINER YOU NAME&lt;your.name@cruk.cam.ac.uk&gt;
 RUN apt-get update
 RUN apt-get install -y samtools bowtie2</code></pre>
-</div>
-<div id="step-2---building-the-image" class="section level2">
-<h2>Step 2 - Building the image</h2>
-<p>We can now have a go at building the image using the <code>build</code> command in docker. The argument <code>-t</code> in this case specifies a name for the image (tag?) and traditionally the <code>Dockerfile</code> is located in the current directory.</p>
 <p>N.B. As the <code>apt-get</code> command will get the latest package versions from the central Ubuntu repository, you will need to be <em>online</em> to run this build command.</p>
-<pre class="bash"><code>docker build -t rna-seq .</code></pre>
+</div>
+<div id="building-the-image" class="section level2">
+<h2>Building the image</h2>
+<p>As for the previous example but with a new Dockerfile.</p>
+<pre class="bash"><code>docker build -t rna-seq -f Dockerfile.rnaseq .</code></pre>
 <p>We can test the image we just built using a <code>docker run</code> statement:-</p>
 <pre class="bash"><code>docker run rna-seq bowtie2</code></pre>
 </div>
@@ -179,14 +189,14 @@ RUN apt-get install -y samtools bowtie2</code></pre>
 <p>The <a href="https://github.com/pachterlab/kallisto/blob/master/INSTALL.md">install instructions</a> mention that we need <code>cmake</code>, and <code>hdf5</code>, so we add the relevant libraries to the <code>apt-get</code> command. Remember, that you’ll need to find the equivalent library names if using a base image other than <code>ubuntu</code>.</p>
 <p>Finally, we want to change to a temporary directory before doing the <code>git clone</code>. We do this in the <code>DOCKERFILE</code> with the <code>WORKDIR</code> instruction (can’t just do <code>cd</code> for some reason?)</p>
 <pre><code>FROM ubuntu
-MAINTAINER YOU NAME&lt;your.name@cruk.cam.ac.uk
+MAINTAINER YOU NAME&lt;your.name@cruk.cam.ac.uk&gt;
 RUN apt-get update
 RUN apt-get install -y samtools bwa 
 RUN apt-get install -y git cmake libhdf5-dev g++
 WORKDIR /tmp</code></pre>
 <p>The remaining lines are composed by taking the lines from the <a href="https://github.com/pachterlab/kallisto/blob/master/INSTALL.md">install instructions</a> and putting a <code>RUN</code> instruction before each line.</p>
 <pre><code>FROM ubuntu
-MAINTAINER YOU NAME&lt;your.name@cruk.cam.ac.uk
+MAINTAINER YOU NAME&lt;your.name@cruk.cam.ac.uk&gt;
 RUN apt-get update
 RUN apt-get install -y samtools bwa 
 RUN apt-get install -y git cmake libhdf5-dev g++
@@ -207,22 +217,6 @@ WORKDIR /</code></pre>
 <pre class="bash"><code>docker build --no-cache -t rna-seq .</code></pre>
 <p>The <code>kallisto</code> software is now accesible to us</p>
 <pre class="bash"><code>docker run rna-seq kallisto</code></pre>
-</div>
-<div id="installing-software-from-other-sources" class="section level2">
-<h2>Installing software from other sources</h2>
-<p>We are now going to install a version of picard from a zip file</p>
-<ul>
-<li>install <code>wget</code> and <code>zip</code></li>
-<li>get the file from <code>https://github.com/broadinstitute/picard/releases/download/2.4.1/picard-tools-2.4.1.zip</code></li>
-<li>unzip</li>
-<li>download java libraries <code>openjdk-8-jdk</code></li>
-</ul>
-<pre><code>RUN apt-get install -y zip wget
-RUN wget https://github.com/broadinstitute/picard/releases/download/2.4.1/picard-tools-2.4.1.zip
-RUN unzip picard-tools-2.4.1.zip
-RUN apt-get update &amp;&amp;  apt-get install -y --fix-missing openjdk-8-jdk</code></pre>
-<p>When calling the picard <code>.jar</code> file, we don’t want to have to refer to the full path to the file every time. So we are going to create an environment using the <code>ENV</code></p>
-<pre class="bash"><code></code></pre>
 </div>
 
 

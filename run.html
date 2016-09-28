@@ -117,7 +117,7 @@ $(document).ready(function () {
 
 <h1 class="title toc-ignore">Running Docker Containers</h1>
 <h4 class="author"><em>Mark Dunning</em></h4>
-<h4 class="date"><em>Last modified: 23 Sep 2016</em></h4>
+<h4 class="date"><em>Last modified: 28 Sep 2016</em></h4>
 
 </div>
 
@@ -131,7 +131,7 @@ $(document).ready(function () {
 <pre><code>Hello World</code></pre>
 <p>or we could print the current date and time</p>
 <pre class="bash"><code>docker run ubuntu date</code></pre>
-<pre><code>Fri Sep 23 15:23:15 UTC 2016</code></pre>
+<pre><code>Wed Sep 28 11:28:56 UTC 2016</code></pre>
 <p>In both cases, we ran a single command, printed the output and then exited. To launch an interactive session, we can change the arguments to the <code>run</code> command to attach standard input with <code>-i</code> (stdin) and allocate an output (tty) with <code>-t</code>. This will drop us into a terminal. You should notice that the the username changes to <code>root</code> and the machine name is the name of the container. You can exit the container using <code>exit</code></p>
 <pre class="bash"><code>docker run -i -t ubuntu /bin/bash</code></pre>
 <p>By default, we are running the <em>latest</em> version of Ubuntu. A very useful feature of Docker is that containers can be versioned, so we can always go back to a previous version. There is a file <code>/etc/lsb-release</code> that will tell us which version of Ubuntu is being run;</p>
@@ -187,7 +187,7 @@ gunzip data/chr17.fa.gz</code></pre>
 -rw-r--r-- 1 1000 1000  7234067 Sep  6 14:46 bwa.sorted.bam
 -rw-r--r-- 1 1000 1000    41656 Sep  6 14:48 bwa.sorted.bam.bai
 -rw-r--r-- 1 1000 1000 82819122 Mar 20  2009 chr17.fa
--rw-r--r-- 1 root root        0 Sep 21 11:00 hello.txt</code></pre>
+-rw-r--r-- 1 root root        0 Sep 28 10:53 hello.txt</code></pre>
 <p>Once the volume is mounted inside the container, anything written to <code>/data/</code> will be visible to the host directory. Exit the <code>delly</code> container, and re-run with the following. A new file should be created in <code>example/</code></p>
 <pre class="bash"><code>docker run -v `pwd`/example/:/data trausch/delly touch /data/hello.txt
 ls example/</code></pre>
@@ -197,8 +197,8 @@ chr17.fa
 hello.txt</code></pre>
 <p>The actual command to run <code>delly</code> on our example data is as follows. When specifying the paths to bam and reference file, we have to specify the paths as they appear inside the container, so <code>/data/</code> in this case.</p>
 <pre class="bash"><code>docker run -v `pwd`/example/:/data trausch/delly delly call -t DEL -o /data/test.bcf -g /data/chr17.fa /data/bwa.sorted.bam</code></pre>
-<pre><code>[2016-Sep-23 15:23:21] delly call -t DEL -o /data/test.bcf -g /data/chr17.fa /data/bwa.sorted.bam 
-[2016-Sep-23 15:23:22] Paired-end clustering
+<pre><code>[2016-Sep-28 11:29:02] delly call -t DEL -o /data/test.bcf -g /data/chr17.fa /data/bwa.sorted.bam 
+[2016-Sep-28 11:29:02] Paired-end clustering
 
 0%   10   20   30   40   50   60   70   80   90   100%
 |----|----|----|----|----|----|----|----|----|----|
@@ -228,28 +228,17 @@ Copyright (C) 2016 Genome Research Ltd.
 <p>You could even release a docker container for the analysis of your paper, as <a href="https://sje30.github.io/">Stephen Eglen</a> from DAMTP has done for his 2014 paper. Running this container will load RStudio with all the packages and scripts available. The implications for reproducibility are tremendous.</p>
 <pre class="bash"><code>docker run -d -p 8787:8787 sje30/waverepo</code></pre>
 </div>
+<div id="running-the-developmental-version-of-bioconductor" class="section level2">
+<h2>Running the developmental version of Bioconductor</h2>
+<p>The Bioconductor project has a 6 month release-cycle and package authors are required to make sure that their package can be compiled and run with the latest version of R and other Bioconductor software. This process typically involves compiling the latest <em>developmental</em> (and potentially unstable) version of R. In the days before docker, this would mean getting the latest <code>.tar.gz</code> file from the CRAN repository, compiling and making on my desktop machine. With docker I can get the latest version onto machine without cluttering it up with lots of different R versions.</p>
+<pre class="bash"><code>docker run -it bioconductor/devel_base R</code></pre>
+</div>
 <div id="entire-pipelines-as-containers" class="section level2">
 <h2>Entire pipelines as containers</h2>
 <p>The Sanger institute have released their entire <a href="https://github.com/cancerit/cgpbox">cancer genome analysis pipeline</a> via docker. This is part of an initiative with the Pan-Cancer genomes project and other major sequencing centres (Broad, DKFZ) are also committed to releasing software this way.</p>
 <p>For the end-user, it is a single command to install the software encompassing the entire pipeline.</p>
 <pre class="bash"><code>docker pull quay.io/wtsicgp/cgp_in_a_box</code></pre>
 <p>Some configuration is required in order to run the pipeline on your own data. However, instructions to download and analyse a test dataset are included on the <a href="https://github.com/cancerit/cgpbox">website</a></p>
-<div id="appendix-commands-used-to-create-an-example-bam-file" class="section level3">
-<h3>Appendix: Commands used to create an example bam file</h3>
-<pre class="bash"><code>### Example files used in Wales Gene Park NGS tutorial
-### See http://www.walesgenepark.cardiff.ac.uk/wp-content/uploads/2013/04/1.1-Introductory-NGS.pdf
-wget http://files.figshare.com/92198/Brca1Reads_1.1.fastq
-wget http://files.figshare.com/92203/Brca1Reads_1.2.fastq
-cat Brca1Reads_1.1.fastq Brca1Reads_1.2.fastq &gt; reads.fq
-wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr17.fa.gz
-gunzip chr17.fa.gz
-bwa index -a bwtsw chr17.fa
-bwa aln chr17.fa reads.fq &gt; bwa.sai
-bwa samse -f bwa.sam chr17.fa bwa.sai reads.fq
-samtools view -bS bwa.sam &gt; bwa.bam
-samtools sort bwa.bam bwa.sorted
-samtools index bwa.sorted.bam</code></pre>
-</div>
 </div>
 
 

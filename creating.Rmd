@@ -5,15 +5,7 @@ date: '`r format(Sys.time(), "Last modified: %d %b %Y")`'
 output: html_document
 ---
 
-## Objective
 
-Create a sandbox image to perform alignment, qc and bowtie alignment of rna-seq data with the following tools:-
-
-- samtools
-- bowtie
-- [kallisto](https://github.com/pachterlab/kallisto)
-
-samtools and bowtie are fairly standard tools, but kallisto is fairly new and generating a lot of interest.
 
 ## Overview
 
@@ -21,28 +13,63 @@ The creation of Docker images is specified by a *Dockerfile*. This is a text fil
 
 In this section we show how to create a Dockerfile and use this file to build a docker image. A useful reference is the official [Docker documentation on Dockerfiles](https://docs.docker.com/engine/reference/builder/), which goes into far more detail than we will here.
 
-*For this section we will assume you have some experience installed Unix tools at the command line.*
+We'll start with an example of modifying the Bioconductor image so that it we have all our favourite Illumina microarray analysis packages at-hand.
 
-## Step 1 - Setting-up the base image
+## Setting-up the base image
 
 - create a blank text file called `Dockerfile` with the following contents
-    + build the image from `ubuntu`
+    + build the image from `bioconductor/release_base`
     + tell docker who you are and where people can complain to
 
 The `FROM` instruction is mandatory as it defines the starting point for your image. 
 
 ```
 FROM ubuntu
-MAINTAINER YOU NAME<your.name@cruk.cam.ac.uk>
+MAINTAINER YOUR NAME<your.name@cruk.cam.ac.uk>
 ```
+
+The remaining lines of the file are the command line steps you would run in order to create the image. We can use the command-line arguments to R to install packages in the usual manner with `biocLite.R`. 
+
+```
+FROM bioconductor/release
+MAINTAINER YOUR NAME<your.name@cruk.cam.ac.uk>
+RUN R -e 'source("http://www.bioconductor.org/biocLite.R");biocLite(c("beadarray", "illuminaHumanv4.db"))'
+```
+That's it!
+
+The `docker build` command is then used to build an image that we can use. The argument `-t` in this case specifies a name for the image (tag?) and traditionally the `Dockerfile` is located in the current directory.
+
+```{bash eval=FALSE}
+docker build -t illumina-analysis .
+```
+
+
+```{bash eval=FALSE}
+docker run -ti illumina-analysis R
+```
+
+## Longer-example
+
+Create a sandbox image to perform alignment, qc and bowtie alignment of rna-seq data with the following tools:-
+
+*For this section we will assume you have some experience of installing Unix tools at the command line.*
+
+
+- samtools
+- bowtie
+- [kallisto](https://github.com/pachterlab/kallisto)
+
+samtools and bowtie are fairly standard tools, but kallisto is fairly new and generating a lot of interest.
 
 - We are going to install `samtools` and `bowtie2` in the image. As it happens, both of these tools are available in standard repositories so can be installed using `apt-get`. It is a good idea to update the repositories to the latest version before installing anything, which is done with the command `apt-get update`. To run this command as part of the build process, we add the `RUN` instruction to `Dockerfile` with the command we want to run.
 
 N.B. If you plan to build your image on a distribution other than ubuntu (e.g. centos) you will have to use the appropriate package manager software (e.g. `yum` for centos).
 
+**Create a new file called Dockerfile.rnaseq**
+
 ```
 FROM ubuntu
-MAINTAINER YOU NAME<your.name@cruk.cam.ac.uk
+MAINTAINER YOU NAME<your.name@cruk.cam.ac.uk>
 RUN apt-get update
 ```
 
@@ -50,19 +77,19 @@ RUN apt-get update
 
 ```
 FROM ubuntu
-MAINTAINER YOU NAME<your.name@cruk.cam.ac.uk
+MAINTAINER YOU NAME<your.name@cruk.cam.ac.uk>
 RUN apt-get update
 RUN apt-get install -y samtools bowtie2
 ```
 
-## Step 2 - Building the image
-
-We can now have a go at building the image using the `build` command in docker. The argument `-t` in this case specifies a name for the image (tag?) and traditionally the `Dockerfile` is located in the current directory.
-
 N.B. As the `apt-get` command will get the latest package versions from the central Ubuntu repository, you will need to be *online* to run this build command.
 
+## Building the image
+
+As for the previous example but with a new Dockerfile.
+
 ```{bash, eval=FALSE}
-docker build -t rna-seq .
+docker build -t rna-seq -f Dockerfile.rnaseq .
 ```
 
 We can test the image we just built using a `docker run` statement:-
@@ -82,7 +109,7 @@ The [install instructions](https://github.com/pachterlab/kallisto/blob/master/IN
 Finally, we want to change to a temporary directory before doing the `git clone`. We do this in the `DOCKERFILE` with the `WORKDIR` instruction (can't just do `cd` for some reason?)
 ```
 FROM ubuntu
-MAINTAINER YOU NAME<your.name@cruk.cam.ac.uk
+MAINTAINER YOU NAME<your.name@cruk.cam.ac.uk>
 RUN apt-get update
 RUN apt-get install -y samtools bwa 
 RUN apt-get install -y git cmake libhdf5-dev g++
@@ -93,7 +120,7 @@ The remaining lines are composed by taking the lines from the [install instructi
 
 ```
 FROM ubuntu
-MAINTAINER YOU NAME<your.name@cruk.cam.ac.uk
+MAINTAINER YOU NAME<your.name@cruk.cam.ac.uk>
 RUN apt-get update
 RUN apt-get install -y samtools bwa 
 RUN apt-get install -y git cmake libhdf5-dev g++
@@ -126,32 +153,3 @@ The `kallisto` software is now accesible to us
 ```{bash, eval=FALSE}
 docker run rna-seq kallisto
 ```
-
-## Installing software from other sources
-
-We are now going to install a version of picard from a zip file
-
-- install `wget` and `zip`
-- get the file from `https://github.com/broadinstitute/picard/releases/download/2.4.1/picard-tools-2.4.1.zip`
-- unzip
-- download java libraries `openjdk-8-jdk`
-
-```
-RUN apt-get install -y zip wget
-RUN wget https://github.com/broadinstitute/picard/releases/download/2.4.1/picard-tools-2.4.1.zip
-RUN unzip picard-tools-2.4.1.zip
-RUN apt-get update &&  apt-get install -y --fix-missing openjdk-8-jdk
-```
-
-When calling the picard `.jar` file, we don't want to have to refer to the full path to the file every time. So we are going to create an environment using the `ENV`
-
-```
-RUN apt-get install -y zip wget
-RUN wget https://github.com/broadinstitute/picard/releases/download/2.4.1/picard-tools-2.4.1.zip
-RUN unzip picard-tools-2.4.1.zip
-RUN apt-get update &&  apt-get install -y --fix-missing openjdk-8-jdk
-ENV PICARD /tmp/picard-tools-2.4.1/picard.jar
-```
-
-
-
