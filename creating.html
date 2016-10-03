@@ -117,7 +117,7 @@ $(document).ready(function () {
 
 <h1 class="title toc-ignore">Creating Docker Containers</h1>
 <h4 class="author"><em>Mark Dunning</em></h4>
-<h4 class="date"><em>Last modified: 28 Sep 2016</em></h4>
+<h4 class="date"><em>Last modified: 03 Oct 2016</em></h4>
 
 </div>
 
@@ -141,7 +141,7 @@ $(document).ready(function () {
 <pre><code>FROM ubuntu
 MAINTAINER YOUR NAME&lt;your.name@cruk.cam.ac.uk&gt;</code></pre>
 <p>The remaining lines of the file are the command line steps you would run in order to create the image. We can use the command-line arguments to R to install packages in the usual manner with <code>biocLite.R</code>.</p>
-<pre><code>FROM bioconductor/release
+<pre><code>FROM bioconductor/release_base
 MAINTAINER YOUR NAME&lt;your.name@cruk.cam.ac.uk&gt;
 RUN R -e 'source(&quot;http://www.bioconductor.org/biocLite.R&quot;);biocLite(c(&quot;beadarray&quot;, &quot;illuminaHumanv4.db&quot;))'</code></pre>
 <p>That’s it!</p>

@@ -31,7 +31,7 @@ MAINTAINER YOUR NAME<your.name@cruk.cam.ac.uk>
 The remaining lines of the file are the command line steps you would run in order to create the image. We can use the command-line arguments to R to install packages in the usual manner with `biocLite.R`. 
 
 ```
-FROM bioconductor/release
+FROM bioconductor/release_base
 MAINTAINER YOUR NAME<your.name@cruk.cam.ac.uk>
 RUN R -e 'source("http://www.bioconductor.org/biocLite.R");biocLite(c("beadarray", "illuminaHumanv4.db"))'
 ```
