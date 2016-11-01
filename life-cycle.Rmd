@@ -1,0 +1,80 @@
+---
+title: "Container Lifecycle"
+author: "Mark Dunning"
+date: "1 November 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,eval=FALSE)
+```
+
+# The life-cycle of a container
+
+The command `docker ps` lists all the docker containers that are currently running. Adding the `-a` argument lists all containers
+
+```{bash}
+docker ps
+docker ps -a
+```
+
+The `docker images` command lists all images present on your machine. The size of the image is given, and some images can be quite large. As you can see, you can be quickly using up disk space by downloading many images.
+
+```{bash}
+docker images
+```
+
+There are convenient one-liners for removing all containers and images.
+
+```{bash}
+docker rm $(docker ps -a -q)
+docker rmi $(docker images -q)
+```
+
+```{bash}
+docker start <container_ID>
+```
+
+# Modifying a container and saving the changes
+
+## Example: installing samtools in a plain Ubuntu image
+
+```{bash}
+docker run -it ubuntu
+```
+
+```{bash}
+apt-get update
+apt-get install -y wget build-essential
+```
+
+```{bash}
+wget https://github.com/samtools/samtools/releases/download/1.3.1/samtools-1.3.1.tar.bz2
+mv samtools-1.3.1.tar.bz2 /opt
+cd /opt
+```
+
+```{bash}
+tar -jxf samtools-1.3.1.tar.bz2
+cd samtools-1.3.1
+./configure
+```
+
+
+```{bash}
+apt-get install -y ncurses-dev
+./configure
+```
+
+```{bash}
+apt-get install zlib1g-dev
+./configure
+make
+make install
+samtools
+```
+
+```{bash}
+
+```
+
