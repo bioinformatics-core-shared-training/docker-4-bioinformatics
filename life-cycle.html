@@ -125,37 +125,62 @@ $(document).ready(function () {
 
 <div id="the-life-cycle-of-a-container" class="section level1">
 <h1>The life-cycle of a container</h1>
-<p>The command <code>docker ps</code> lists all the docker containers that are currently running. Adding the <code>-a</code> argument lists all containers</p>
+<p>The command <code>docker ps</code> lists all the docker containers that are currently running. Adding the <code>-a</code> argument lists all containers, even those that have been exited.</p>
 <pre class="bash"><code>docker ps
 docker ps -a</code></pre>
 <p>The <code>docker images</code> command lists all images present on your machine. The size of the image is given, and some images can be quite large. As you can see, you can be quickly using up disk space by downloading many images.</p>
 <pre class="bash"><code>docker images</code></pre>
-<p>There are convenient one-liners for removing all containers and images.</p>
+<p>Even after a container has been exited, it can be re-activated and modified at any point. If you do want this option, you can specifiy the <code>--rm</code> flag when running a container. In the following chunk, the first run statement should create a new entry in the output of <code>docker ps -a</code>, whereas the second container run with the <code>--rm</code> flag will not.</p>
+<pre class="bash"><code>docker run -it ubuntu
+docker ps -a
+docker run --rm -it ubuntu
+docker ps -a
+</code></pre>
+<p>If you find your disk filling up with docker images, there are convenient one-liners for removing all containers and images.</p>
 <pre class="bash"><code>docker rm $(docker ps -a -q)
 docker rmi $(docker images -q)</code></pre>
+<p>You can go back into the environment of a container that has been exited. Firstly, we make sure the container is running by using <code>docker start</code>:-</p>
 <pre class="bash"><code>docker start &lt;container_ID&gt;</code></pre>
+<p>We can then use <code>docker attach</code>. Note that you will have to <strong><em>press ENTER twice</em></strong> in order to get a new command prompt within the container.</p>
+<pre class="bash"><code>docker attach &lt;container_ID&gt;</code></pre>
 </div>
 <div id="modifying-a-container-and-saving-the-changes" class="section level1">
 <h1>Modifying a container and saving the changes</h1>
+<p>As an example we will take the standard Ubuntu image and modify it to include the samtools software suite.</p>
 <div id="example-installing-samtools-in-a-plain-ubuntu-image" class="section level2">
 <h2>Example: installing samtools in a plain Ubuntu image</h2>
+<p>We start by running the plain ubuntu image interactively.</p>
 <pre class="bash"><code>docker run -it ubuntu</code></pre>
+<p>We’ll now assume that you know something about installing packages on Ubuntu. For those familiar with CentOS, you could use <code>yum</code> for the following steps. We are installing <code>wget</code> to allow us to download a file, and <code>build-essential</code> which provided c compilers and other useful tools for building and making software. The <code>-y</code> argument stops <code>apt-get</code> for asking for a prompt before installing.</p>
 <pre class="bash"><code>apt-get update
 apt-get install -y wget build-essential</code></pre>
+<p>We now dowload the source code for a particular version of <code>samtools</code>. Alternative steps would have been to <code>clone</code> the repository in github, or even use an <code>apt-get</code> command like we did for <code>wget</code> and <code>build-essential</code>. However, this would get whatever the latest version is at the point in time. Sometimes for the sake of reproducibility, we want to say exactly version of the software was used. Typically we install into the <code>\opt</code> directory.</p>
 <pre class="bash"><code>wget https://github.com/samtools/samtools/releases/download/1.3.1/samtools-1.3.1.tar.bz2
 mv samtools-1.3.1.tar.bz2 /opt
 cd /opt</code></pre>
+<p>We unpack the source code and attempt to install by first running <code>./configure</code></p>
 <pre class="bash"><code>tar -jxf samtools-1.3.1.tar.bz2
 cd samtools-1.3.1
 ./configure</code></pre>
+<p>it turns out that we need an additional library, and after a quick google search we come across <code>ncurses-dev</code></p>
 <pre class="bash"><code>apt-get install -y ncurses-dev
 ./configure</code></pre>
+<p>this time it even tells us which library was missing. This allows us to <code>make</code> and <code>make install</code> so that <code>samtools</code> is available from anywhere in our directory structure.</p>
 <pre class="bash"><code>apt-get install zlib1g-dev
 ./configure
 make
 make install
 samtools</code></pre>
-<pre class="bash"><code></code></pre>
+<p>We can now quit the container and re-enter</p>
+<pre class="bash"><code>docker start &lt;name-of-container-that-just-exited&gt;
+docker attach &lt;name-of-container-that-just-exited&gt;</code></pre>
+<p>We can create a new image based on the changes we made</p>
+<pre class="bash"><code>docker commit &lt;name-of-container-that-just-exited&gt; docker-test/samtools</code></pre>
+<p>The new image is now available to be used in the usual fashion.</p>
+<pre class="bash"><code>docker run docker-test/samtools samtools</code></pre>
+<p>One option for making this image available to others is with the <code>docker export</code> command, which will create a <code>.tar.gz</code> file.</p>
+<pre class="bash"><code>docker export docker-test/samtools</code></pre>
+<p>The file can be imported with <code>docker import</code>. However, the true docker-way is to create a file (a <strong><em>Dockefile</em></strong>) from which your image can be automatically re-built.</p>
 </div>
 </div>
 

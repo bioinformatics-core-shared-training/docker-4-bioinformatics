@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE,eval=FALSE)
 
 # The life-cycle of a container
 
-The command `docker ps` lists all the docker containers that are currently running. Adding the `-a` argument lists all containers
+The command `docker ps` lists all the docker containers that are currently running. Adding the `-a` argument lists all containers, even those that have been exited. 
 
 ```{bash}
 docker ps
@@ -20,33 +20,62 @@ docker ps -a
 
 The `docker images` command lists all images present on your machine. The size of the image is given, and some images can be quite large. As you can see, you can be quickly using up disk space by downloading many images.
 
+
 ```{bash}
 docker images
 ```
 
-There are convenient one-liners for removing all containers and images.
+Even after a container has been exited, it can be re-activated and modified at any point. If you do want this option, you can specifiy the `--rm` flag when running a container. In the following chunk, the first run statement should create a new entry in the output of `docker ps -a`, whereas the second container run with the `--rm` flag will not.
+
+```{bash}
+docker run -it ubuntu
+docker ps -a
+docker run --rm -it ubuntu
+docker ps -a
+
+```
+
+If you find your disk filling up with docker images, there are convenient one-liners for removing all containers and images.
 
 ```{bash}
 docker rm $(docker ps -a -q)
 docker rmi $(docker images -q)
 ```
 
+You can go back into the environment of a container that has been exited. Firstly, we make sure the container is running by using `docker start`:-
+
 ```{bash}
 docker start <container_ID>
 ```
 
+We can then use `docker attach`. Note that you will have to ***press ENTER twice*** in order to get a new command prompt within the container.
+
+```{bash}
+docker attach <container_ID>
+```
+
+
+
 # Modifying a container and saving the changes
 
+As an example we will take the standard Ubuntu image and modify it to include the samtools software suite.
+
 ## Example: installing samtools in a plain Ubuntu image
+
+We start by running the plain ubuntu image interactively.
 
 ```{bash}
 docker run -it ubuntu
 ```
 
+We'll now assume that you know something about installing packages on Ubuntu. For those familiar with CentOS, you could use `yum` for the following steps. We are installing `wget` to allow us to download a file, and `build-essential` which provided c compilers and other useful tools for building and making software. The `-y` argument stops `apt-get` for asking for a prompt before installing.
+
 ```{bash}
 apt-get update
 apt-get install -y wget build-essential
 ```
+
+We now dowload the source code for a particular version of `samtools`. Alternative steps would have been to `clone` the repository in github, or even use an `apt-get` command like we did for `wget` and `build-essential`. However, this would get whatever the latest version is at the point in time. Sometimes for the sake of reproducibility, we want to say exactly version of the software was used. Typically we install into the `\opt` directory.
 
 ```{bash}
 wget https://github.com/samtools/samtools/releases/download/1.3.1/samtools-1.3.1.tar.bz2
@@ -54,17 +83,23 @@ mv samtools-1.3.1.tar.bz2 /opt
 cd /opt
 ```
 
+We unpack the source code and attempt to install by first running `./configure`
+
+
 ```{bash}
 tar -jxf samtools-1.3.1.tar.bz2
 cd samtools-1.3.1
 ./configure
 ```
 
+it turns out that we need an additional library, and after a quick google search we come across `ncurses-dev`
 
 ```{bash}
 apt-get install -y ncurses-dev
 ./configure
 ```
+
+this time it even tells us which library was missing. This allows us to `make` and `make install` so that `samtools` is available from anywhere in our directory structure.
 
 ```{bash}
 apt-get install zlib1g-dev
@@ -74,7 +109,29 @@ make install
 samtools
 ```
 
-```{bash}
+We can now quit the container and re-enter
 
+```{bash}
+docker start <name-of-container-that-just-exited>
+docker attach <name-of-container-that-just-exited>
 ```
 
+We can create a new image based on the changes we made
+
+```{bash}
+docker commit <name-of-container-that-just-exited> docker-test/samtools
+```
+
+The new image is now available to be used in the usual fashion.
+
+```{bash}
+docker run docker-test/samtools samtools
+```
+
+One option for making this image available to others is with the `docker export` command, which will create a `.tar.gz` file.
+
+```{bash}
+docker export docker-test/samtools
+```
+
+The file can be imported with `docker import`. However, the true docker-way is to create a file (a ***Dockefile***) from which your image can be automatically re-built.
