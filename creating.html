@@ -118,7 +118,7 @@ $(document).ready(function () {
 
 <h1 class="title toc-ignore">Creating Docker Containers</h1>
 <h4 class="author"><em>Mark Dunning</em></h4>
-<h4 class="date"><em>Last modified: 04 Nov 2016</em></h4>
+<h4 class="date"><em>Last modified: 08 Nov 2016</em></h4>
 
 </div>
 
@@ -126,27 +126,27 @@ $(document).ready(function () {
 <p>The creation of Docker images is specified by a <em>Dockerfile</em>. This is a text file containing the sequence of instructions required to re-create your image from some starting point, which could be the standard Ubuntu image. Essentially we list the commands we use, step-by-step to install all the software required. If you already have a shell script to install your software, then translating to a Dockerfile is relatively painless.</p>
 <p>In this section we show how to create a Dockerfile and use this file to build a docker image. A useful reference is the official <a href="https://docs.docker.com/engine/reference/builder/">Docker documentation on Dockerfiles</a>, which goes into far more detail than we will here.</p>
 <p>In this example we show the <strong><em>Dockerfile</em></strong> used to create a Ubuntu image with the <code>build-essential</code> and <code>wget</code> tools installed.</p>
-<pre><code>## FROM ubuntu
-## MAINTAINER YOU NAME&lt;your.name@cruk.cam.ac.uk&gt;
-## RUN apt-get update
-## RUN apt-get install -y wget build-essential</code></pre>
+<pre><code>FROM ubuntu
+MAINTAINER YOU NAME&lt;your.name@cruk.cam.ac.uk&gt;
+RUN apt-get update
+RUN apt-get install -y wget build-essential</code></pre>
 <p>The <code>FROM</code> instruction is mandatory as it defines the starting point for your image. It is good practice to have a contact address too.</p>
 <p>The remaining lines of the file are the command line steps you would run in order to create the image.</p>
-<p>The <code>docker build</code> command is then used to build an image that we can use. The argument <code>-t</code> in this case specifies a name for the image (tag?) and traditionally the <code>Dockerfile</code> is located in the current directory.</p>
+<p>The <code>docker build</code> command is then used to build an image that we can use. The argument <code>-t</code> in this case specifies a name for the image (tag?) and traditionally the <code>Dockerfile</code> is located in the current directory. The current directory will also be used to define the <em>context</em>, meaning you can include files or directories on your local machine in the image. Note that we do not need a <code>sudo</code> as the image is built with super-user privileges.</p>
 <pre class="bash"><code>docker build -t=&quot;docker-test/ubuntu-build-essential&quot; .</code></pre>
 <p>To create a <code>Dockerfile</code> for our samtools image, we can firstly take advantage of the <code>build-essential</code> image that we just created to ensure we have <code>wget</code> and the <code>build-essential</code> tools available.</p>
-<pre><code>## FROM docker-test/ubuntu-build-essential
-## MAINTAINER YOU NAME&lt;your.name@cruk.cam.ac.uk&gt;
-## RUN apt-get update
-## RUN apt-get install -y ncurses-dev zlib1g-dev
-## RUN wget https://github.com/samtools/samtools/releases/download/1.3.1/samtools-1.3.1.tar.bz2
-## RUN mv samtools-1.3.1.tar.bz2 /opt
-## WORKDIR /opt
-## RUN tar -jxf samtools-1.3.1.tar.bz2
-## WORKDIR samtools-1.3.1
-## RUN ./configure
-## RUN make
-## RUN make install</code></pre>
+<pre><code>FROM docker-test/ubuntu-build-essential
+MAINTAINER YOU NAME&lt;your.name@cruk.cam.ac.uk&gt;
+RUN apt-get update
+RUN apt-get install -y ncurses-dev zlib1g-dev
+RUN wget https://github.com/samtools/samtools/releases/download/1.3.1/samtools-1.3.1.tar.bz2
+RUN mv samtools-1.3.1.tar.bz2 /opt
+WORKDIR /opt
+RUN tar -jxf samtools-1.3.1.tar.bz2
+WORKDIR samtools-1.3.1
+RUN ./configure
+RUN make
+RUN make install</code></pre>
 <p>The remaining steps translate the steps we used in the previous section to the <code>Dockerfile</code> syntax. The only tricky bit is to change directory you need the <code>WORKDIR</code> command rather than a unix <code>cd</code> command.</p>
 <pre class="bash"><code>docker build -t=&quot;docker-test/samtools&quot; -f Dockerfile.samtools .</code></pre>
 <p>We already mentioned that ‘dockerhub’ is a repository where people can distribute their docker containers. You can easily sign-up for a dockerhub account if you already have github. Then any container can be pushed with the <code>docker push</code> command. Here, I tag my image with the prefix <code>markdunning</code> (which is my github and dockerhub account)</p>
@@ -155,6 +155,25 @@ docker push markdunning/ubuntu-build-essential</code></pre>
 <p>The container is then <a href="https://hub.docker.com/r/markdunning/ubuntu-build-essential/">available on dockerhub</a></p>
 <p>N.B. you’ll notice the image builds much quicker because it has already been built once. To stop this behaviour you can specify the <code>--no-cache</code> option</p>
 <p>In fact, you can build images from a github repository with <a href="https://docs.docker.com/docker-hub/builds/">Automated Builds</a></p>
+<p>There are more commands available in a Dockerfile, as described in the <a href="https://docs.docker.com/engine/reference/builder/">reference guide</a>. Some particular ones I have used, or encountered…</p>
+<ul>
+<li><p><code>USER</code> to change the user</p></li>
+<li><code>ENV</code> to create an environment variable
+<ul>
+<li>e.g. to link to a particular java file</li>
+</ul></li>
+</ul>
+<pre class="bash"><code>ENV PICARD /opt/picard-tools....</code></pre>
+<ul>
+<li><code>ENTRYPOINT</code> change what command is automatically run
+<ul>
+<li>e.g. the sanger cgpbox is defined to run a particular script</li>
+</ul></li>
+</ul>
+<pre class="bash"><code>ENTRYPOINT $OPT/bin/runCgp.sh</code></pre>
+<ul>
+<li><code>EXPOSE</code> make a particular port number available</li>
+</ul>
 
 
 

@@ -55,7 +55,7 @@ docker run ubuntu:14.04 cat /etc/lsb-release
 
 Let's say that someone has released a new tool that sounds amazing. You are itching to try it out, but from past experience know how much of a pain it can be to install new software. Moreover, if you are experimenting with lots of different packages your `software` directory can get polluted with lots of tools that you run only once. This is a situation where docker can really help. 
 
-As an example, the author of `delly` (a tool for calling structural variants) has created a docker container that we can run. Typically docker containers are uploaded to the central `Dockerhub` repository and submitted under a particular username (`trausch` in this case). It is common for a docker file to be under version control in github. 
+As an example, the author of `delly` (a tool for calling structural variants) has created a docker container that we can run. We have been previously running a `ubuntu` container, which is an official container in Docker. Typically docker containers are uploaded to the central `Dockerhub` repository and submitted under a particular username (`trausch` in this case). It is common for a docker file to be under version control in github. 
 
 - [delly dockerhub entry](https://hub.docker.com/r/trausch/delly/)
 - [delly github page](https://github.com/tobiasrausch/delly)
@@ -79,7 +79,7 @@ wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr17.fa.gz -P e
 gunzip data/chr17.fa.gz
 ```
 
-The `-v` argument is used to mount the volume in the form `-v FROM:TO`. In this example, we mount the `example/` sub-directory of the current working directory to a folder `/data/` inside the container. This needs to be the full path to the directory. We use `pwd` to expand the current working directory.
+The `-v` argument is used to mount the volume in the form `-v FROM:TO`. In this example, we mount the `example/` sub-directory of the current working directory to a folder `/data/` inside the container. This needs to be the full path to the directory. We can use `pwd` command to expand the current working directory.
 
 ```{bash eval=FALSE}
 docker run -ti -v `pwd`/example/:/data trausch/delly /bin/bash
@@ -95,14 +95,14 @@ ls -l /data/
 docker run -v `pwd`/example:/data trausch/delly ls -l data/
 ```
 
-Once the volume is mounted inside the container, anything written to `/data/` will be visible to the host directory. Exit the `delly` container, and re-run with the following. A new file should be created in `example/` 
+Once the volume is mounted inside the container, anything written to `/data/` will be visible to the host directory. Exit the `delly` container (`CTRL + D`), and re-run with the following. A new file should be created in `example/` 
 
 ```{bash}
 docker run -v `pwd`/example/:/data trausch/delly touch /data/hello.txt
 ls example/
 ```
 
-The actual command to run `delly` on our example data is as follows. When specifying the paths to bam and reference file, we have to specify the paths as they appear inside the container, so `/data/` in this case.
+The actual command to run `delly` on our example data is as follows. When specifying the paths to the bam and reference file, we have to specify the paths as they appear inside the container, so `/data/` in this case.
 
 ```{bash}
 docker run -v `pwd`/example/:/data trausch/delly delly call -t DEL -o /data/test.bcf -g /data/chr17.fa /data/bwa.sorted.bam
@@ -117,6 +117,7 @@ docker run -v `pwd`/example/:/data trausch/delly samtools --version
 docker run -v `pwd`/example/:/data trausch/delly samtools view -H /data/bwa.sorted.bam
 ```
 
+Later we will see how we can build our own container that includes a particular version of `samtools`.
 
 ## Running the latest version of Bioconductor
 
@@ -128,7 +129,7 @@ To run such a container, we can use the following. Here the `-p` argument is to 
 docker run -p 8787:8787 bioconductor/release_base
 ```
 
-We if we open a web browser and type the address`http://localhost:8787`, you should see a rstudio server login page. The username and password are both `rstudio`. After login you will have a fully-functioning RStudio instance inside your web browser. If you require a package you can use `install.packages` or `biocLite` in the usual fashion
+We if we open a web browser and type the address`http://localhost:8787`, you should see a Rstudio server login page. The username and password are both `rstudio`. After login you will have a fully-functioning RStudio instance inside your web browser. If you require a package you can use `install.packages` or `biocLite` in the usual fashion
 
 If you require command line R, rather than RStudio, you can do
 
@@ -136,7 +137,7 @@ If you require command line R, rather than RStudio, you can do
 docker run -ti bioconductor/release_base R
 ```
 
-Don't forget that if you want to save your results to the host machine you will need to mount a volume as we discussed above. If you find yourself installing the same R packages every time you launch the container, you probably want to be building your own. This is achievable by creating a *Dockerfile*, as we will see in the next section.
+Don't forget that if you want to save your results to the host machine you will need to mount a volume as we discussed above. 
 
 You could even release a docker container for the analysis of your paper, as [Stephen Eglen](https://sje30.github.io/) from DAMTP has done for his 2014 paper. Running this container will load RStudio with all the packages and scripts available. The implications for reproducibility are tremendous. 
 
@@ -144,7 +145,7 @@ You could even release a docker container for the analysis of your paper, as [St
 docker run -d -p 8787:8787 sje30/waverepo
 ```
 
-Building such an image is fairly painless, as one can extend the existing Bioconductor image to include your own packages and data. We will explore this in the *Creating containers* section.
+Building such an image is fairly painless, as one can extend the existing Bioconductor image to include your own packages and data. We will explore this in the following sections.
 
 ## Running the developmental version of Bioconductor
 

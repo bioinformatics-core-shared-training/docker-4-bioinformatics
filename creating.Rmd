@@ -5,7 +5,7 @@ date: '`r format(Sys.time(), "Last modified: %d %b %Y")`'
 output: html_document
 ---
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE,eval=FALSE)
+knitr::opts_chunk$set(echo = TRUE,eval=FALSE,comment=NA)
 ```
 
 
@@ -26,7 +26,7 @@ The `FROM` instruction is mandatory as it defines the starting point for your im
 
 The remaining lines of the file are the command line steps you would run in order to create the image. 
 
-The `docker build` command is then used to build an image that we can use. The argument `-t` in this case specifies a name for the image (tag?) and traditionally the `Dockerfile` is located in the current directory.
+The `docker build` command is then used to build an image that we can use. The argument `-t` in this case specifies a name for the image (tag?) and traditionally the `Dockerfile` is located in the current directory. The current directory will also be used to define the *context*, meaning you can include files or directories on your local machine in the image. Note that we do not need a `sudo` as the image is built with super-user privileges.
 
 ```{bash}
 docker build -t="docker-test/ubuntu-build-essential" .
@@ -57,3 +57,23 @@ The container is then [available on dockerhub](https://hub.docker.com/r/markdunn
 N.B. you'll notice the image builds much quicker because it has already been built once. To stop this behaviour you can specify the `--no-cache` option
 
 In fact, you can build images from a github repository with [Automated Builds](https://docs.docker.com/docker-hub/builds/)
+
+There are more commands available in a Dockerfile, as described in the [reference guide](https://docs.docker.com/engine/reference/builder/). Some particular ones I have used, or encountered...
+
+- `USER` to change the user
+
+- `ENV` to create an environment variable
+    + e.g. to link to a particular java file
+    
+```{bash}
+ENV PICARD /opt/picard-tools....
+```
+
+- `ENTRYPOINT` change what command is automatically run
+    + e.g. the sanger cgpbox is defined to run a particular script
+    
+```{bash}
+ENTRYPOINT $OPT/bin/runCgp.sh
+```
+
+- `EXPOSE` make a particular port number available

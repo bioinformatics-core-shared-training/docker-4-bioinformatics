@@ -1,12 +1,12 @@
 ---
 title: "Container Lifecycle"
 author: "Mark Dunning"
-date: "1 November 2016"
+date: '`r format(Sys.time(), "Last modified: %d %b %Y")`'
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE,eval=FALSE)
+knitr::opts_chunk$set(echo = TRUE,eval=FALSE,comment =NA)
 ```
 
 # The life-cycle of a container
@@ -18,7 +18,7 @@ docker ps
 docker ps -a
 ```
 
-The `docker images` command lists all images present on your machine. The size of the image is given, and some images can be quite large. As you can see, you can be quickly using up disk space by downloading many images.
+The `docker images` command lists all images present on your machine. The size of the image is given, and some images can be quite large. As you can see, you can be quickly use-up disk space by downloading many images.
 
 
 ```{bash}
@@ -36,6 +36,8 @@ docker ps -a
 ```
 
 If you find your disk filling up with docker images, there are convenient one-liners for removing all containers and images.
+
+***Don't run this now, unless you want everything you've been working on to be deleted!***
 
 ```{bash}
 docker rm $(docker ps -a -q)
@@ -68,7 +70,9 @@ We start by running the plain ubuntu image interactively.
 docker run -it ubuntu
 ```
 
-We'll now assume that you know something about installing packages on Ubuntu. For those familiar with CentOS, you could use `yum` for the following steps. We are installing `wget` to allow us to download a file, and `build-essential` which provided c compilers and other useful tools for building and making software. The `-y` argument stops `apt-get` for asking for a prompt before installing.
+We'll now assume that you know something about installing packages on Ubuntu. For those familiar with CentOS, you could use `yum` for the following steps. We are installing `wget` to allow us to download a file, and `build-essential` which provided c compilers and other useful tools for building and making software. The `-y` argument stops `apt-get` asking for a prompt before installing.
+
+Note that we do not need to prefix these commands with `sudo`, as we are automatically running as a superuser.
 
 ```{bash}
 apt-get update
@@ -109,14 +113,15 @@ make install
 samtools
 ```
 
-We can now quit the container and re-enter
+We can now quit the container (`CTRL + D`). Alternatively, `CTRL P+Q` keeps the container running in the background. `docker attach` will put us back inside the container (you'll need `docker start` first if you quit container with `CTRL + D`)
 
 ```{bash}
 docker start <name-of-container-that-just-exited>
 docker attach <name-of-container-that-just-exited>
 ```
 
-We can create a new image based on the changes we made
+
+We can create a new image based on the changes we made, giving it an appropriate name. If you intend to submit this to dockerhub, the name should be prefixed by your github / dockerhub username.
 
 ```{bash}
 docker commit <name-of-container-that-just-exited> docker-test/samtools
@@ -125,6 +130,7 @@ docker commit <name-of-container-that-just-exited> docker-test/samtools
 The new image is now available to be used in the usual fashion.
 
 ```{bash}
+docker images
 docker run docker-test/samtools samtools
 ```
 
@@ -134,4 +140,4 @@ One option for making this image available to others is with the `docker export`
 docker export docker-test/samtools
 ```
 
-The file can be imported with `docker import`. However, the true docker-way is to create a file (a ***Dockefile***) from which your image can be automatically re-built.
+The file can be imported with `docker import`. However, the true docker way is to create a file (a ***Dockefile***) from which your image can be automatically re-built.
