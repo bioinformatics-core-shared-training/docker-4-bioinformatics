@@ -118,7 +118,7 @@ $(document).ready(function () {
 
 <h1 class="title toc-ignore">Running Docker Containers</h1>
 <h4 class="author"><em>Mark Dunning</em></h4>
-<h4 class="date"><em>Last modified: 08 Nov 2016</em></h4>
+<h4 class="date"><em>Last modified: 09 Nov 2016</em></h4>
 
 </div>
 
@@ -132,7 +132,7 @@ $(document).ready(function () {
 <pre><code>Hello World</code></pre>
 <p>or we could print the current date and time</p>
 <pre class="bash"><code>docker run ubuntu date</code></pre>
-<pre><code>Tue Nov  8 13:27:58 UTC 2016</code></pre>
+<pre><code>Wed Nov  9 12:02:58 UTC 2016</code></pre>
 <p>In both cases, we ran a single command, printed the output and then exited. To launch an interactive session, we can change the arguments to the <code>run</code> command to attach standard input with <code>-i</code> (stdin) and allocate an output (tty) with <code>-t</code>. This will drop us into a terminal. You should notice that the the username changes to <code>root</code> and the machine name is the name of the container. You can exit the container using <code>exit</code></p>
 <pre class="bash"><code>docker run -i -t ubuntu /bin/bash</code></pre>
 <p>By default, we are running the <em>latest</em> version of Ubuntu. A very useful feature of Docker is that containers can be versioned, so we can always go back to a previous version. There is a file <code>/etc/lsb-release</code> that will tell us which version of Ubuntu is being run;</p>
@@ -188,21 +188,19 @@ gunzip data/chr17.fa.gz</code></pre>
 -rw-r--r-- 1 ubuntu ubuntu  7234067 Sep  6 14:46 bwa.sorted.bam
 -rw-r--r-- 1 ubuntu ubuntu    41656 Sep  6 14:48 bwa.sorted.bam.bai
 -rw-r--r-- 1 ubuntu ubuntu 82819122 Mar 20  2009 chr17.fa
--rw-r--r-- 1 ubuntu ubuntu       23 Nov  8 13:16 chr17.fa.fai
--rw-r--r-- 1 root   root          0 Sep 28 11:29 hello.txt</code></pre>
+-rw-r--r-- 1 ubuntu ubuntu       23 Nov  8 13:16 chr17.fa.fai</code></pre>
 <p>Once the volume is mounted inside the container, anything written to <code>/data/</code> will be visible to the host directory. Exit the <code>delly</code> container (<code>CTRL + D</code>), and re-run with the following. A new file should be created in <code>example/</code></p>
 <pre class="bash"><code>docker run -v `pwd`/example/:/data trausch/delly touch /data/hello.txt
 ls example/</code></pre>
-<pre><code>touch: cannot touch '/data/hello.txt': Permission denied
-bwa.sorted.bam
+<pre><code>bwa.sorted.bam
 bwa.sorted.bam.bai
 chr17.fa
 chr17.fa.fai
 hello.txt</code></pre>
 <p>The actual command to run <code>delly</code> on our example data is as follows. When specifying the paths to the bam and reference file, we have to specify the paths as they appear inside the container, so <code>/data/</code> in this case.</p>
 <pre class="bash"><code>docker run -v `pwd`/example/:/data trausch/delly delly call -t DEL -o /data/test.bcf -g /data/chr17.fa /data/bwa.sorted.bam</code></pre>
-<pre><code>[2016-Nov-08 13:28:04] delly call -t DEL -o /data/test.bcf -g /data/chr17.fa /data/bwa.sorted.bam 
-[2016-Nov-08 13:28:04] Paired-end clustering
+<pre><code>[2016-Nov-09 12:03:04] delly call -t DEL -o /data/test.bcf -g /data/chr17.fa /data/bwa.sorted.bam 
+[2016-Nov-09 12:03:04] Paired-end clustering
 
 0%   10   20   30   40   50   60   70   80   90   100%
 |----|----|----|----|----|----|----|----|----|----|
