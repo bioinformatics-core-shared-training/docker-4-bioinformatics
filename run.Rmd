@@ -76,7 +76,7 @@ We can mount *volumes* from a particular location on our host drive onto the fil
 
 ```{bash eval=FALSE}
 wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr17.fa.gz -P example/
-gunzip data/chr17.fa.gz
+gunzip example/chr17.fa.gz
 ```
 
 The `-v` argument is used to mount the volume in the form `-v FROM:TO`. In this example, we mount the `example/` sub-directory of the current working directory to a folder `/data/` inside the container. This needs to be the full path to the directory. We can use `pwd` command to expand the current working directory.
@@ -138,6 +138,11 @@ docker run -ti bioconductor/release_base R
 ```
 
 Don't forget that if you want to save your results to the host machine you will need to mount a volume as we discussed above. 
+
+```{bash eval=FALSE}
+docker run -v `pwd`:/home/rstudio -ti bioconductor/release_base R
+```
+
 
 You could even release a docker container for the analysis of your paper, as [Stephen Eglen](https://sje30.github.io/) from DAMTP has done for his 2014 paper. Running this container will load RStudio with all the packages and scripts available. The implications for reproducibility are tremendous. 
 
