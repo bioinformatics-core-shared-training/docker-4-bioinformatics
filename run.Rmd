@@ -55,21 +55,21 @@ docker run ubuntu:14.04 cat /etc/lsb-release
 
 Let's say that someone has released a new tool that sounds amazing. You are itching to try it out, but from past experience know how much of a pain it can be to install new software. Moreover, if you are experimenting with lots of different packages your `software` directory can get polluted with lots of tools that you run only once. This is a situation where docker can really help. 
 
-As an example, the author of `delly` (a tool for calling structural variants) has created a docker container that we can run. We have been previously running a `ubuntu` container, which is an official container in Docker. Typically docker containers are uploaded to the central `Dockerhub` repository and submitted under a particular username (`trausch` in this case). It is common for a docker file to be under version control in github. 
+As an example, the author of `delly` (a tool for calling structural variants) has created a docker container that we can run. We have been previously running a `ubuntu` container, which is an official container in Docker. Typically docker containers are uploaded to the central `Dockerhub` repository and submitted under a particular username (`dellytools` in this case). It is common for a docker file to be under version control in github. 
 
-- [delly dockerhub entry](https://hub.docker.com/r/trausch/delly/)
+- [delly dockerhub entry](https://hub.docker.com/r/dellytools/delly/)
 - [delly github page](https://github.com/tobiasrausch/delly)
 
 The main program, `delly` can be run from the container to display help information;
 
 ```{bash}
-docker run trausch/delly delly
+docker run dellytools/delly delly
 ```
 
 As before, we can run delly interactively with the `-it` argument. However, once we launch into docker we cannot automatically see the contents of our own hard drive. 
 
 ```{bash eval=FALSE}
-docker run -it trausch/delly /bin/bash
+docker run -it dellytools/delly /bin/bash
 ```
 
 We can mount *volumes* from a particular location on our host drive onto the file system used in the docker container. Let's mount the `example/` directory of the course materials folder. Currently, this contains an [example `.bam` file](https://github.com/bioinformatics-core-shared-training/docker-4-bioinformatics/raw/master/example/bwa.sorted.bam) (mapped reads for a small region on chromosome 17) and [index](https://github.com/bioinformatics-core-shared-training/docker-4-bioinformatics/raw/master/example/bwa.sorted.bam.bai). The analysis we are going to do will also require a reference genome, which you can download from UCSC. 
@@ -82,7 +82,7 @@ gunzip example/chr17.fa.gz
 The `-v` argument is used to mount the volume in the form `-v FROM:TO`. In this example, we mount the `example/` sub-directory of the current working directory to a folder `/data/` inside the container. This needs to be the full path to the directory. We can use `pwd` command to expand the current working directory.
 
 ```{bash eval=FALSE}
-docker run -ti -v `pwd`/example/:/data trausch/delly /bin/bash
+docker run -ti -v `pwd`/example/:/data dellytools/delly /bin/bash
 ```
 
 Once the container is launched, we can list the contents of `/data/`, which should hopefully should match the local contents of `example/`
@@ -92,20 +92,20 @@ ls -l /data/
 ```
 
 ```{bash echo=FALSE}
-docker run -v `pwd`/example:/data trausch/delly ls -l data/
+docker run -v `pwd`/example:/data dellytools/delly ls -l data/
 ```
 
 Once the volume is mounted inside the container, anything written to `/data/` will be visible to the host directory. Exit the `delly` container (`CTRL + D`), and re-run with the following. A new file should be created in `example/` 
 
 ```{bash}
-docker run -v `pwd`/example/:/data trausch/delly touch /data/hello.txt
+docker run -v `pwd`/example/:/data dellytools/delly touch /data/hello.txt
 ls example/
 ```
 
 The actual command to run `delly` on our example data is as follows. When specifying the paths to the bam and reference file, we have to specify the paths as they appear inside the container, so `/data/` in this case.
 
 ```{bash}
-docker run -v `pwd`/example/:/data trausch/delly delly call -t DEL -o /data/test.bcf -g /data/chr17.fa /data/bwa.sorted.bam
+docker run -v `pwd`/example/:/data dellytools/delly delly call -t DEL -o /data/test.bcf -g /data/chr17.fa /data/bwa.sorted.bam
 ```
 
 Note that we don't actually call any structural variants in this example. That isn't important. What matters is that we've managed to setup the tool and run the tool in a relatively painless manner.
@@ -113,8 +113,8 @@ Note that we don't actually call any structural variants in this example. That i
 A docker container may be comprised of many different software, so we are not just restricted to just running `delly` or standard unix commands. The container also has a version of `samtools`.
 
 ```{bash}
-docker run -v `pwd`/example/:/data trausch/delly samtools --version
-docker run -v `pwd`/example/:/data trausch/delly samtools view -H /data/bwa.sorted.bam
+docker run -v `pwd`/example/:/data dellytools/delly samtools --version
+docker run -v `pwd`/example/:/data dellytools/delly samtools view -H /data/bwa.sorted.bam
 ```
 
 Later we will see how we can build our own container that includes a particular version of `samtools`.
