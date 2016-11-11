@@ -81,6 +81,8 @@ gunzip example/chr21.fa.gz
 
 The `-v` argument is used to mount the volume in the form `-v FROM:TO`. In this example, we mount the `example/` sub-directory of the current working directory to a folder `/data/` inside the container. This needs to be the full path to the directory. We can use `pwd` command to expand the current working directory.
 
+***Note*** on Mac OSX, you may need to specify the directory that you want mounted in Docker. The default setup includes `/Users/` and `Volumes`, but if you want to use something else you'll need to add it to the list in ***Preferences***.
+
 ```{bash eval=FALSE}
 docker run -ti -v `pwd`/example/:/data dellytools/delly /bin/bash
 ```
