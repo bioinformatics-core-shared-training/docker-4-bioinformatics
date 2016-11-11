@@ -131,7 +131,7 @@ $(document).ready(function () {
 <pre><code>Hello World</code></pre>
 <p>or we could print the current date and time</p>
 <pre class="bash"><code>docker run ubuntu date</code></pre>
-<pre><code>Fri Nov 11 10:39:14 UTC 2016</code></pre>
+<pre><code>Fri Nov 11 10:43:21 UTC 2016</code></pre>
 <p>In both cases, we ran a single command, printed the output and then exited. To launch an interactive session, we can change the arguments to the <code>run</code> command to attach standard input with <code>-i</code> (stdin) and allocate an output (tty) with <code>-t</code>. This will drop us into a terminal. You should notice that the the username changes to <code>root</code> and the machine name is the name of the container. You can exit the container using <code>exit</code></p>
 <pre class="bash"><code>docker run -i -t ubuntu /bin/bash</code></pre>
 <p>By default, we are running the <em>latest</em> version of Ubuntu. A very useful feature of Docker is that containers can be versioned, so we can always go back to a previous version. There is a file <code>/etc/lsb-release</code> that will tell us which version of Ubuntu is being run;</p>
@@ -187,7 +187,6 @@ ls -l /data/</code></pre>
 <pre><code>total 73704
 -rw-r--r-- 1 ubuntu ubuntu 49092500 Nov 11 08:58 chr21.fa
 -rw-r--r-- 1 ubuntu ubuntu       23 Nov 11 10:13 chr21.fa.fai
-drwxr-xr-x 2 ubuntu ubuntu       68 Oct  3 14:24 test
 -rw-r--r-- 1 ubuntu ubuntu 26342948 Nov 11 09:37 test.bam
 -rw-r--r-- 1 ubuntu ubuntu    28176 Nov 11 09:37 test.bam.bai</code></pre>
 <p>Once the volume is mounted inside the container, anything written to <code>/data/</code> will be visible to the host directory. Exit the <code>delly</code> container (<code>CTRL + D</code>), and re-run with the following. A new file should be created in <code>example/</code></p>
@@ -196,46 +195,45 @@ ls example/</code></pre>
 <pre><code>chr21.fa
 chr21.fa.fai
 hello.txt
-test
 test.bam
 test.bam.bai</code></pre>
 <p>The actual command to run <code>delly</code> on our example data is as follows. When specifying the paths to the bam and reference file, we have to specify the paths as they appear inside the container, so <code>/data/</code> in this case.</p>
 <pre class="bash"><code>docker run -v `pwd`/example/:/data dellytools/delly delly call -t DUP -o /data/test.bcf -g /data/chr21.fa /data/test.bam</code></pre>
-<pre><code>[2016-Nov-11 10:39:37] delly call -t DUP -o /data/test.bcf -g /data/chr21.fa /data/test.bam 
-[2016-Nov-11 10:39:38] Paired-end clustering
+<pre><code>[2016-Nov-11 10:43:44] delly call -t DUP -o /data/test.bcf -g /data/chr21.fa /data/test.bam 
+[2016-Nov-11 10:43:44] Paired-end clustering
 
 0%   10   20   30   40   50   60   70   80   90   100%
 |----|----|----|----|----|----|----|----|----|----|
 ***************************************************
-[2016-Nov-11 10:39:38] Split-read alignment
+[2016-Nov-11 10:43:45] Split-read alignment
 
 0%   10   20   30   40   50   60   70   80   90   100%
 |----|----|----|----|----|----|----|----|----|----|
 ***************************************************
-[2016-Nov-11 10:39:39] Junction read annotation
+[2016-Nov-11 10:43:46] Junction read annotation
 
 0%   10   20   30   40   50   60   70   80   90   100%
 |----|----|----|----|----|----|----|----|----|----|
 ***************************************************
-[2016-Nov-11 10:39:39] Breakpoint spanning coverage annotation
+[2016-Nov-11 10:43:46] Breakpoint spanning coverage annotation
 
 0%   10   20   30   40   50   60   70   80   90   100%
 |----|----|----|----|----|----|----|----|----|----|
 ***************************************************
-[2016-Nov-11 10:39:40] Read-depth annotation
+[2016-Nov-11 10:43:47] Read-depth annotation
 
 0%   10   20   30   40   50   60   70   80   90   100%
 |----|----|----|----|----|----|----|----|----|----|
 ***************************************************
-[2016-Nov-11 10:39:41] Genotyping
+[2016-Nov-11 10:43:48] Genotyping
 
 0%   10   20   30   40   50   60   70   80   90   100%
 |----|----|----|----|----|----|----|----|----|----|
 ***************************************************
-[2016-Nov-11 10:39:41] Library statistics
+[2016-Nov-11 10:43:48] Library statistics
 Sample: HCC1143
 RG: ID=HCC1143,ReadSize=76,AvgDist=1,EstCov=76,MappedAsPair=0.999035,Median=156,MAD=37,Layout=2,MaxSize=489,MinSize=0,UniqueDiscordantPairs=42
-[2016-Nov-11 10:39:41] Done.</code></pre>
+[2016-Nov-11 10:43:48] Done.</code></pre>
 <p><code>delly</code> should manage to call a known tandem duplication in this example dataset. But more importantly, we’ve managed to install and run the tool in a relatively painless manner. If you look in the example directory you should find a <code>test.bcf</code> output file. You can convert and view this in the more-common (and human readable) VCF format using the <code>bcftools</code> utility available as part of SAMtools. But what if we don’t have <code>samtools</code> installed? Well, luckily the <code>delly</code> container also contains a version of <code>samtools</code> and <code>bcftools</code></p>
 <p><strong><em>Exercise</em></strong>: run <code>bcftools</code> from inside the delly container to view the contents of the <code>test.bcf</code> file output by <code>delly</code>.</p>
 <p>HINT <code>bcftools view</code> can be used to print a bcf file in human readable form.</p>
