@@ -94,8 +94,15 @@ Once the container is launched, we can list the contents of `/data/`, which shou
 ls -l /data/
 ```
 
+
 ```{bash echo=FALSE}
-docker run -v `pwd`/example:/data dellytools/delly ls -l data/
+docker run -v `pwd`/example:/data dellytools/delly ls -l /data/
+```
+
+Note that this directory doesn't already have to be present in the directory structure of the container
+
+```{bash echo=TRUE,eval=FALSE}
+docker run -v `pwd`/example:/mark dellytools/delly ls -l /mark/
 ```
 
 Once the volume is mounted inside the container, anything written to `/data/` will be visible to the host directory. Exit the `delly` container (`CTRL + D`), and re-run with the following. A new file should be created in `example/` 
