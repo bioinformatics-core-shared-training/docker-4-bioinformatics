@@ -79,6 +79,13 @@ apt-get update
 apt-get install -y wget build-essential
 ```
 
+***NOTE*** `build-essential` is quite a large package, so there could be network issues if many people try and download at the same time. In this case, we can use a pre-built container as our starting point
+
+```{bash}
+docker run -it markdunning/ubuntu-build-essential
+```
+
+
 We now dowload the source code for a particular version of `samtools`. Alternative steps would have been to `clone` the repository in github, or even use an `apt-get` command like we did for `wget` and `build-essential`. However, this would get whatever the latest version is at the point in time. Sometimes for the sake of reproducibility, we want to say exactly version of the software was used. Typically we install into the `\opt` directory.
 
 ```{bash}
@@ -140,4 +147,4 @@ One option for making this image available to others is with the `docker export`
 docker export docker-test/samtools
 ```
 
-The file can be imported with `docker import`. However, the true docker way is to create a file (a ***Dockefile***) from which your image can be automatically re-built.
+The file can be imported with `docker import`. However, the true docker way is to create a file (a ***Dockefile***) from which your image can be automatically re-built. We will demonstrate this in the next section
