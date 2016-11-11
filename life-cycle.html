@@ -153,23 +153,28 @@ docker rmi $(docker images -q)</code></pre>
 <pre class="bash"><code>docker run -it ubuntu</code></pre>
 <p>We’ll now assume that you know something about installing packages on Ubuntu. For those familiar with CentOS, you could use <code>yum</code> for the following steps. We are installing <code>wget</code> to allow us to download a file, and <code>build-essential</code> which provided c compilers and other useful tools for building and making software. The <code>-y</code> argument stops <code>apt-get</code> asking for a prompt before installing.</p>
 <p>Note that we do not need to prefix these commands with <code>sudo</code>, as we are automatically running as a superuser.</p>
-<pre class="bash"><code>apt-get update
+<pre class="bash"><code>####Run this inside the ubuntu container####
+apt-get update
 apt-get install -y wget build-essential</code></pre>
 <p><strong><em>NOTE</em></strong> <code>build-essential</code> is quite a large package, so there could be network issues if many people try and download at the same time. In this case, we can use a pre-built container as our starting point</p>
 <pre class="bash"><code>docker run -it markdunning/ubuntu-build-essential</code></pre>
 <p>We now dowload the source code for a particular version of <code>samtools</code>. Alternative steps would have been to <code>clone</code> the repository in github, or even use an <code>apt-get</code> command like we did for <code>wget</code> and <code>build-essential</code>. However, this would get whatever the latest version is at the point in time. Sometimes for the sake of reproducibility, we want to say exactly version of the software was used. Typically we install into the <code>\opt</code> directory.</p>
-<pre class="bash"><code>wget https://github.com/samtools/samtools/releases/download/1.3.1/samtools-1.3.1.tar.bz2
+<pre class="bash"><code>####Run this inside the ubuntu container####
+wget https://github.com/samtools/samtools/releases/download/1.3.1/samtools-1.3.1.tar.bz2
 mv samtools-1.3.1.tar.bz2 /opt
 cd /opt</code></pre>
 <p>We unpack the source code and attempt to install by first running <code>./configure</code></p>
-<pre class="bash"><code>tar -jxf samtools-1.3.1.tar.bz2
+<pre class="bash"><code>####Run this inside the ubuntu container####
+tar -jxf samtools-1.3.1.tar.bz2
 cd samtools-1.3.1
 ./configure</code></pre>
 <p>it turns out that we need an additional library, and after a quick google search we come across <code>ncurses-dev</code></p>
-<pre class="bash"><code>apt-get install -y ncurses-dev
+<pre class="bash"><code>####Run this inside the ubuntu container####
+apt-get install -y ncurses-dev
 ./configure</code></pre>
 <p>this time it even tells us which library was missing. This allows us to <code>make</code> and <code>make install</code> so that <code>samtools</code> is available from anywhere in our directory structure.</p>
-<pre class="bash"><code>apt-get install zlib1g-dev
+<pre class="bash"><code>####Run this inside the ubuntu container####
+apt-get install zlib1g-dev
 ./configure
 make
 make install
@@ -181,7 +186,7 @@ docker attach &lt;name-of-container-that-just-exited&gt;</code></pre>
 <pre class="bash"><code>docker commit &lt;name-of-container-that-just-exited&gt; docker-test/samtools</code></pre>
 <p>The new image is now available to be used in the usual fashion.</p>
 <pre class="bash"><code>docker images
-docker run docker-test/samtools samtools</code></pre>
+docker run docker-test/samtools samtools view -H example/test.bam</code></pre>
 <p>One option for making this image available to others is with the <code>docker export</code> command, which will create a <code>.tar.gz</code> file.</p>
 <pre class="bash"><code>docker export docker-test/samtools</code></pre>
 <p>The file can be imported with <code>docker import</code>. However, the true docker way is to create a file (a <strong><em>Dockefile</em></strong>) from which your image can be automatically re-built. We will demonstrate this in the next section</p>

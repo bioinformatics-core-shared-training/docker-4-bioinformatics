@@ -75,6 +75,7 @@ We'll now assume that you know something about installing packages on Ubuntu. Fo
 Note that we do not need to prefix these commands with `sudo`, as we are automatically running as a superuser.
 
 ```{bash}
+####Run this inside the ubuntu container####
 apt-get update
 apt-get install -y wget build-essential
 ```
@@ -89,6 +90,7 @@ docker run -it markdunning/ubuntu-build-essential
 We now dowload the source code for a particular version of `samtools`. Alternative steps would have been to `clone` the repository in github, or even use an `apt-get` command like we did for `wget` and `build-essential`. However, this would get whatever the latest version is at the point in time. Sometimes for the sake of reproducibility, we want to say exactly version of the software was used. Typically we install into the `\opt` directory.
 
 ```{bash}
+####Run this inside the ubuntu container####
 wget https://github.com/samtools/samtools/releases/download/1.3.1/samtools-1.3.1.tar.bz2
 mv samtools-1.3.1.tar.bz2 /opt
 cd /opt
@@ -98,6 +100,7 @@ We unpack the source code and attempt to install by first running `./configure`
 
 
 ```{bash}
+####Run this inside the ubuntu container####
 tar -jxf samtools-1.3.1.tar.bz2
 cd samtools-1.3.1
 ./configure
@@ -106,6 +109,7 @@ cd samtools-1.3.1
 it turns out that we need an additional library, and after a quick google search we come across `ncurses-dev`
 
 ```{bash}
+####Run this inside the ubuntu container####
 apt-get install -y ncurses-dev
 ./configure
 ```
@@ -113,6 +117,7 @@ apt-get install -y ncurses-dev
 this time it even tells us which library was missing. This allows us to `make` and `make install` so that `samtools` is available from anywhere in our directory structure.
 
 ```{bash}
+####Run this inside the ubuntu container####
 apt-get install zlib1g-dev
 ./configure
 make
@@ -138,7 +143,7 @@ The new image is now available to be used in the usual fashion.
 
 ```{bash}
 docker images
-docker run docker-test/samtools samtools
+docker run docker-test/samtools samtools view -H example/test.bam
 ```
 
 One option for making this image available to others is with the `docker export` command, which will create a `.tar.gz` file.
