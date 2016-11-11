@@ -94,7 +94,6 @@ button.code-folding-btn:focus {
 </style>
 
 
-
 <div class="container-fluid main-container">
 
 <!-- tabsets -->
@@ -118,7 +117,7 @@ $(document).ready(function () {
 
 <h1 class="title toc-ignore">Container Lifecycle</h1>
 <h4 class="author"><em>Mark Dunning</em></h4>
-<h4 class="date"><em>Last modified: 08 Nov 2016</em></h4>
+<h4 class="date"><em>Last modified: 11 Nov 2016</em></h4>
 
 </div>
 
@@ -156,6 +155,8 @@ docker rmi $(docker images -q)</code></pre>
 <p>Note that we do not need to prefix these commands with <code>sudo</code>, as we are automatically running as a superuser.</p>
 <pre class="bash"><code>apt-get update
 apt-get install -y wget build-essential</code></pre>
+<p><strong><em>NOTE</em></strong> <code>build-essential</code> is quite a large package, so there could be network issues if many people try and download at the same time. In this case, we can use a pre-built container as our starting point</p>
+<pre class="bash"><code>docker run -it markdunning/ubuntu-build-essential</code></pre>
 <p>We now dowload the source code for a particular version of <code>samtools</code>. Alternative steps would have been to <code>clone</code> the repository in github, or even use an <code>apt-get</code> command like we did for <code>wget</code> and <code>build-essential</code>. However, this would get whatever the latest version is at the point in time. Sometimes for the sake of reproducibility, we want to say exactly version of the software was used. Typically we install into the <code>\opt</code> directory.</p>
 <pre class="bash"><code>wget https://github.com/samtools/samtools/releases/download/1.3.1/samtools-1.3.1.tar.bz2
 mv samtools-1.3.1.tar.bz2 /opt
@@ -183,7 +184,7 @@ docker attach &lt;name-of-container-that-just-exited&gt;</code></pre>
 docker run docker-test/samtools samtools</code></pre>
 <p>One option for making this image available to others is with the <code>docker export</code> command, which will create a <code>.tar.gz</code> file.</p>
 <pre class="bash"><code>docker export docker-test/samtools</code></pre>
-<p>The file can be imported with <code>docker import</code>. However, the true docker way is to create a file (a <strong><em>Dockefile</em></strong>) from which your image can be automatically re-built.</p>
+<p>The file can be imported with <code>docker import</code>. However, the true docker way is to create a file (a <strong><em>Dockefile</em></strong>) from which your image can be automatically re-built. We will demonstrate this in the next section</p>
 </div>
 </div>
 
@@ -198,7 +199,6 @@ docker run docker-test/samtools samtools</code></pre>
 $(document).ready(function () {
   $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
 });
-
 
 </script>
 
