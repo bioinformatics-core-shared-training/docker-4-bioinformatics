@@ -72,11 +72,11 @@ As before, we can run delly interactively with the `-it` argument. However, once
 docker run -it dellytools/delly /bin/bash
 ```
 
-We can mount *volumes* from a particular location on our host drive onto the file system used in the docker container. Let's mount the `example/` directory of the course materials folder. Currently, this contains an [example `.bam` file](https://github.com/bioinformatics-core-shared-training/docker-4-bioinformatics/raw/master/example/bwa.sorted.bam) (mapped reads for a small region on chromosome 17) and [index](https://github.com/bioinformatics-core-shared-training/docker-4-bioinformatics/raw/master/example/bwa.sorted.bam.bai). The analysis we are going to do will also require a reference genome, which you can download from UCSC. 
+We can mount *volumes* from a particular location on our host drive onto the file system used in the docker container. Let's mount the `example/` directory of the course materials folder. Currently, this contains an [example `.bam` file](https://github.com/bioinformatics-core-shared-training/docker-4-bioinformatics/raw/master/example/test.bam) (mapped reads for a small region on chromosome 21) and [index](https://github.com/bioinformatics-core-shared-training/docker-4-bioinformatics/raw/master/example/test.bam.bai). The analysis we are going to do will also require a reference genome, which you can download from UCSC. 
 
 ```{bash eval=FALSE}
-wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr17.fa.gz -P example/
-gunzip example/chr17.fa.gz
+wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/chr21.fa.gz -P example/
+gunzip example/chr21.fa.gz
 ```
 
 The `-v` argument is used to mount the volume in the form `-v FROM:TO`. In this example, we mount the `example/` sub-directory of the current working directory to a folder `/data/` inside the container. This needs to be the full path to the directory. We can use `pwd` command to expand the current working directory.
@@ -105,19 +105,26 @@ ls example/
 The actual command to run `delly` on our example data is as follows. When specifying the paths to the bam and reference file, we have to specify the paths as they appear inside the container, so `/data/` in this case.
 
 ```{bash}
-docker run -v `pwd`/example/:/data dellytools/delly delly call -t DEL -o /data/test.bcf -g /data/chr17.fa /data/bwa.sorted.bam
+docker run -v `pwd`/example/:/data dellytools/delly delly call -t DUP -o /data/test.bcf -g /data/chr21.fa /data/test.bam
 ```
 
-Note that we don't actually call any structural variants in this example. That isn't important. What matters is that we've managed to setup the tool and run the tool in a relatively painless manner.
+If you look in the example directory you should find a `test.bcf` output file. You can view this in VCF format using the `bcftools` utility available as part of SAMtools. `delly` manages to call a known tandem duplication in this example dataset, but more importantly, we've managed to install and run the tool in a relatively painless manner.
 
 A docker container may be comprised of many different software, so we are not just restricted to just running `delly` or standard unix commands. The container also has a version of `samtools`.
 
 ```{bash}
 docker run -v `pwd`/example/:/data dellytools/delly samtools --version
-docker run -v `pwd`/example/:/data dellytools/delly samtools view -H /data/bwa.sorted.bam
+docker run -v `pwd`/example/:/data dellytools/delly samtools view -H /data/test.bam
+```
+
+```{bash, eval=FALSE}
+docker run -v `pwd`/example/:/data dellytools/delly bcftools view /data/test.bcf
 ```
 
 Later we will see how we can build our own container that includes a particular version of `samtools`.
+
+Exercise: run `bcftools` to view the contents of the `test.bcf` file output by `delly`.
+
 
 ## Running the latest version of Bioconductor
 
